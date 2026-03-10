@@ -1,5 +1,11 @@
 // Client-side JavaScript for all pages
-const socket = io();
+// Replace your existing socket initialization with this:
+const socket = io({
+  transports: ['websocket'], // Force WebSocket only for Render
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  timeout: 20000
+});
 
 // ==================== UTILITY FUNCTIONS ====================
 

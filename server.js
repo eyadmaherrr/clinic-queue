@@ -3,31 +3,43 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const session = require('express-session');
+const fetch = require('node-fetch'); // You'll need to install this
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'] // Allow both but websocket preferred
+});
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
+// Session middleware - FIXED for Render
 app.use(session({
-    secret: 'clinic-queue-secret-key',
+    secret: process.env.SESSION_SECRET || 'clinic-queue-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        secure: process.env.NODE_ENV === 'production', // true for HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax' // Important for Render
     }
 }));
+
+// Trust proxy - IMPORTANT for Render
+app.set('trust proxy', 1);
 
 // Simple authentication
 const USERS = {
     admin: {
-        password: '12345',
+        password: '12345', // CHANGE THIS AFTER DEPLOYMENT!
         role: 'admin'
     }
 };
@@ -42,7 +54,7 @@ const patientPhoneMap = new Map(); // phoneNumber -> patientId
 
 // Constants
 const AVERAGE_CONSULTATION_TIME = 5; // minutes per patient
-const BASE_URL = 'http://localhost:3000'; // Change this in production
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const COUNTRY_CODE = '20'; // Egypt country code
 
 // Helper functions
@@ -53,43 +65,28 @@ const calculateWaitingTime = (position) => {
 
 /**
  * Smart phone number formatting for Egypt (+20)
- * Handles various input formats and normalizes to +20[digits]
  */
 const formatPhoneNumber = (phone) => {
     // Remove all non-digit characters
     let digits = phone.replace(/\D/g, '');
     
-    console.log('Raw input digits:', digits); // Debug log
+    console.log('Raw input digits:', digits);
     
-    // If no digits, return empty
     if (!digits) return '';
     
-    // Case 1: Number already has 20 prefix (with or without +)
+    // Case 1: Number already has 20 prefix
     if (digits.startsWith('20')) {
-        // Already has correct country code
         return digits;
     }
     
-    // Case 2: Number starts with 0 (local format: 01012345678)
+    // Case 2: Number starts with 0 (01012345678)
     if (digits.startsWith('0')) {
-        // Remove leading zero and add 20
         digits = digits.substring(1);
         return '20' + digits;
     }
     
-    // Case 3: Number starts with 1 (mobile without zero: 1012345678)
+    // Case 3: Number starts with 1 (1012345678)
     if (digits.startsWith('1')) {
-        // Add 20 prefix
-        return '20' + digits;
-    }
-    
-    // Case 4: Number starts with 2 (might be partial country code)
-    if (digits.startsWith('2') && digits.length > 3) {
-        // Check if it's actually 20 followed by more digits
-        if (digits.substring(0, 2) === '20') {
-            return digits;
-        }
-        // It's 2 followed by something else, add 0?
         return '20' + digits;
     }
     
@@ -102,17 +99,14 @@ const formatPhoneNumber = (phone) => {
  */
 const displayPhoneNumber = (phoneDigits) => {
     if (!phoneDigits) return '';
-    
-    // Ensure it starts with 20
     if (phoneDigits.startsWith('20')) {
         return `+${phoneDigits}`;
-    } else {
-        return `+20${phoneDigits}`;
     }
+    return `+20${phoneDigits}`;
 };
 
 /**
- * Extract the local number without country code
+ * Get local number without country code
  */
 const getLocalNumber = (phoneDigits) => {
     if (phoneDigits.startsWith('20')) {
@@ -148,10 +142,27 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-// Routes
+// ==================== RENDER-SPECIFIC FIXES ====================
+
+// Health check endpoint (required for Render)
+app.get('/healthz', (req, res) => {
+    res.status(200).json({ 
+        status: 'healthy', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        queueLength: queue.length,
+        currentServing: currentServing ? currentServing.id : null,
+        memory: process.memoryUsage(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Root redirect
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
+
+// ==================== AUTH ROUTES ====================
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -176,6 +187,8 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+// ==================== PAGE ROUTES ====================
+
 app.get('/dashboard', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
@@ -188,51 +201,42 @@ app.get('/screen', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'screen.html'));
 });
 
-// Redirect any old /view/:token links to track page
+// Redirect old view links
 app.get('/view/:token', (req, res) => {
     res.redirect('/track');
 });
 
-// API endpoint to get patient by phone number
+// ==================== API ROUTES ====================
+
+// Get patient by phone number
 app.get('/api/patient/:phone', (req, res) => {
     let phone = req.params.phone;
-    
-    // Remove any non-digit characters
     phone = phone.replace(/\D/g, '');
     
     if (!phone || phone.length < 3) {
         return res.status(400).json({ error: 'Invalid phone number' });
     }
 
-    console.log('Searching for phone:', phone); // Debug log
+    console.log('Searching for phone:', phone);
 
-    // Try different formats to find the patient
+    // Try different formats
     let patient = null;
     
-    // Format 1: As entered
+    // As entered
     patient = queue.find(p => p.phoneDigits === phone);
     
-    // Format 2: With 20 prefix
+    // With 20 prefix
     if (!patient && !phone.startsWith('20')) {
         const with20 = '20' + phone;
         patient = queue.find(p => p.phoneDigits === with20);
     }
     
-    // Format 3: Remove leading zero and add 20
+    // Remove leading zero and add 20
     if (!patient && phone.startsWith('0')) {
         const withoutZero = phone.substring(1);
         const with20 = '20' + withoutZero;
         patient = queue.find(p => p.phoneDigits === with20);
     }
-    
-    // Format 4: If they entered with 20 already but different format
-    if (!patient && phone.startsWith('20')) {
-        const without20 = phone.substring(2);
-        const with20again = '20' + without20;
-        patient = queue.find(p => p.phoneDigits === with20again);
-    }
-    
-    console.log('Found:', patient ? 'yes' : 'no'); // Debug log
     
     if (!patient) {
         return res.status(404).json({ error: 'Phone number not found in queue' });
@@ -252,7 +256,7 @@ app.get('/api/patient/:phone', (req, res) => {
     });
 });
 
-// API endpoint to add patient (reception only)
+// Add patient (reception only)
 app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
     const { name, phoneNumber } = req.body;
     
@@ -260,26 +264,22 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
         return res.status(400).json({ error: 'Name and phone number are required' });
     }
 
-    // Format phone number to Egypt standard (+20)
-    let phoneDigits = formatPhoneNumber(phoneNumber);
+    const phoneDigits = formatPhoneNumber(phoneNumber);
     
-    console.log('Formatted phone:', phoneDigits); // Debug log
+    console.log('Formatted phone:', phoneDigits);
     
-    // Validate phone number (should be 11-12 digits total with country code)
     if (phoneDigits.length < 11 || phoneDigits.length > 13) {
         return res.status(400).json({ 
             error: 'Please enter a valid Egyptian phone number (e.g., 01012345678 or 1012345678)' 
         });
     }
 
-    // Check if patient already in queue
     const existingPatient = queue.find(p => p.phoneDigits === phoneDigits);
     
     if (existingPatient) {
         return res.status(400).json({ error: 'Phone number already registered in queue' });
     }
 
-    // Create new patient
     const newPatient = {
         id: nextId++,
         name: name,
@@ -290,14 +290,10 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
     };
 
     queue.push(newPatient);
-
-    // Store phone mapping
     patientPhoneMap.set(phoneDigits, newPatient.id);
 
-    // Generate track link
     const trackLink = `${BASE_URL}/track`;
 
-    // Generate WhatsApp message
     const whatsappMessage = encodeURIComponent(
         `🏥 *Clinic Queue System*\n\n` +
         `Hello *${name}*, you have been added to the queue.\n\n` +
@@ -307,12 +303,9 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
         `👉 *Track your position:*\n` +
         `${trackLink}\n\n` +
         `📱 *Your phone number on file:* ${displayPhoneNumber(phoneDigits)}\n\n` +
-        `*You can also track using:* ${getLocalNumber(phoneDigits)} (without +20)\n\n` +
-        `Just click the link above and enter your phone number to see your position in real-time!\n\n` +
         `Thank you for choosing our clinic!`
     );
 
-    // For WhatsApp link, use the digits with 20 prefix
     const whatsappLink = `https://wa.me/${phoneDigits}?text=${whatsappMessage}`;
 
     updateAllClients();
@@ -324,18 +317,14 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
             displayPhone: displayPhoneNumber(phoneDigits)
         },
         trackLink: trackLink,
-        whatsappLink: whatsappLink,
-        formats: {
-            full: displayPhoneNumber(phoneDigits),
-            local: getLocalNumber(phoneDigits),
-            withCountryCode: phoneDigits
-        }
+        whatsappLink: whatsappLink
     });
 });
 
-// Socket.io connection handling
+// ==================== SOCKET.IO WITH RENDER FIXES ====================
+
 io.on('connection', (socket) => {
-    console.log('New client connected');
+    console.log('New client connected from:', socket.handshake.address);
 
     // Send initial queue state
     const queueData = {
@@ -397,15 +386,39 @@ io.on('connection', (socket) => {
     });
 });
 
+// ==================== RENDER KEEP-AWAKE MECHANISM ====================
+
+// Self-ping every 10 minutes to help keep the app alive
+if (process.env.NODE_ENV === 'production') {
+    const selfUrl = process.env.RENDER_EXTERNAL_URL || BASE_URL;
+    
+    setInterval(async () => {
+        try {
+            const response = await fetch(`${selfUrl}/healthz`);
+            const data = await response.json();
+            console.log(`[${new Date().toISOString()}] Self-ping successful - Queue: ${data.queueLength} patients`);
+        } catch (err) {
+            console.log(`[${new Date().toISOString()}] Self-ping failed:`, err.message);
+        }
+    }, 10 * 60 * 1000); // Every 10 minutes
+    
+    console.log(`✅ Keep-awake mechanism enabled - pinging every 10 minutes`);
+}
+
+// ==================== START SERVER ====================
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log('\n=== Clinic Queue System ===');
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🔐 Login page: http://localhost:${PORT}/login`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard (requires login)`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
     console.log(`📱 Track page: http://localhost:${PORT}/track`);
     console.log(`📺 TV Screen: http://localhost:${PORT}/screen`);
-    console.log(`🔑 Admin password: 12345 (you can edit this later)`);
-    console.log(`📞 Egypt country code: +20`);
+    console.log(`🔑 Admin password: 12345 (CHANGE THIS AFTER DEPLOYMENT!)`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    if (process.env.RENDER_EXTERNAL_URL) {
+        console.log(`📡 Public URL: ${process.env.RENDER_EXTERNAL_URL}`);
+    }
     console.log('===========================\n');
 });
