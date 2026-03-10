@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Room Screen - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="tv-screen">
+    <div class="screen-container">
+        <!-- Simple Header -->
+        <header class="screen-header">
+            <h1>Dr Maher Mahmoud Clinics</h1>
+            <div class="datetime" id="datetime"></div>
+        </header>
+
+        <main class="screen-main">
+            <!-- Split Layout: Current Serving + Next Patients -->
+            <div class="split-layout">
+                <!-- Left Side: Current Serving -->
+                <div class="current-serving-card">
+                    <div class="current-serving-label">CURRENT SERVING</div>
+                    <div class="current-serving-number" id="nowServing">207</div>
+                </div>
+
+                <!-- Right Side: Next Patients Grid -->
+                <div class="next-patients-container">
+                    <div class="next-patients-label">NEXT</div>
+                    <div class="next-patients-grid" id="nextPatients">
+                        <!-- Next patients will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simple Queue Info -->
+            <div class="queue-info-bar">
+                <div class="queue-info-item">
+                    <span class="info-label">Total in Queue:</span>
+                    <span class="info-value" id="totalInQueue">0</span>
+                </div>
+                <div class="queue-info-item">
+                    <span class="info-label">Est. Wait Time:</span>
+                    <span class="info-value" id="estimatedWait">0 min</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

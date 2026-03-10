@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%230a1a3f' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z'/%3E%3Cpath d='M16 2v4'/%3E%3Cpath d='M8 2v4'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E" alt="Clinic Logo">
+                <h1>Clinic Queue System</h1>
+                <p>Reception Dashboard Login</p>
+            </div>
+            
+            <form action="/login" method="POST" class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="password">Admin Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Enter admin password">
+                </div>
+                
+                <div id="errorMessage" class="error-message hidden"></div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Login to Dashboard</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Default password: <strong>12345</strong> (you can change this later)</p>
+                <p class="note">⚠️ For security, please change the password after first login</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check for error in URL
+        if (window.location.search.includes('error=1')) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = 'Invalid password';
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Prevent form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+    </script>
+</body>
+</html>

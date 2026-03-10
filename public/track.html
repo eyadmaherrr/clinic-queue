@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Queue Position - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="track-container">
+            <div class="track-header">
+                <h1>🏥 Clinic Queue System</h1>
+                <p>Enter your phone number to track your position</p>
+            </div>
+
+            <!-- Phone Number Entry Form -->
+            <div id="phoneEntryForm" class="phone-entry-form">
+                <div class="form-card">
+                    <div class="form-icon">📱</div>
+                    <h2>Track Your Queue Position</h2>
+                    <p class="form-description">Enter the phone number you used when registering at reception</p>
+                    
+                    <div class="phone-input-container">
+                        <span class="country-code">+2</span>
+                        <input type="tel" id="phoneNumber" placeholder="123456789" 
+                               autocomplete="off" autofocus>
+                    </div>
+                    
+                    <div class="input-group">
+                        <button id="trackBtn" class="btn btn-primary btn-large">Track Position</button>
+                    </div>
+                    
+                    <div id="trackError" class="track-error hidden"></div>
+                    <div id="trackSuccess" class="track-success hidden"></div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state hidden">
+                <div class="spinner"></div>
+                <p>Fetching your queue information...</p>
+            </div>
+
+            <!-- Queue Status Display -->
+            <div id="queueStatus" class="queue-status hidden">
+                <div class="status-card">
+                    <button id="backBtn" class="back-btn">← Track Another Number</button>
+                    
+                    <div class="patient-info-header">
+                        <div>
+                            <span class="label">Patient Name</span>
+                            <span class="patient-name" id="patientName">-</span>
+                        </div>
+                        <div>
+                            <span class="label">Phone Number</span>
+                            <span class="patient-phone" id="patientPhone">-</span>
+                        </div>
+                    </div>
+
+                    <div class="queue-number">
+                        <span class="label">Your Queue Number</span>
+                        <span class="number" id="queueNumber">-</span>
+                    </div>
+                    
+                    <div class="position-info">
+                        <div class="info-item">
+                            <span class="label">Position in Queue</span>
+                            <span class="value" id="position">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">People Ahead</span>
+                            <span class="value" id="peopleAhead">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Est. Waiting Time</span>
+                            <span class="value" id="waitingTime">-</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+
+                    <div class="current-serving">
+                        <span class="label">Currently Serving</span>
+                        <span class="value" id="currentServing">-</span>
+                    </div>
+
+                    <div class="queue-length">
+                        <span class="label">Total in Queue</span>
+                        <span class="value" id="queueLength">-</span>
+                    </div>
+
+                    <div class="auto-refresh-note">
+                        🔄 This page updates automatically every few seconds
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

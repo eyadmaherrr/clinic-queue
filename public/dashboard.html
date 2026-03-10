@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Reception Dashboard</h1>
+                    <div class="current-serving-header">
+                        <span>Currently Serving:</span>
+                        <span class="serving-number" id="currentServingDisplay">None</span>
+                    </div>
+                </div>
+                <a href="/logout" class="btn btn-danger logout-btn">Logout</a>
+            </div>
+
+            <!-- Add Patient Form -->
+            <div class="add-patient-section">
+                <h2>Add New Patient</h2>
+                <form id="addPatientForm" class="add-patient-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patientName">Patient Name</label>
+                            <input type="text" id="patientName" name="patientName" 
+                                   placeholder="Enter full name" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number (with country code)</label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" 
+                                   placeholder="e.g., +1234567890" required 
+                                   pattern="^\+?[\d\s-]{10,}$"
+                                   title="Please enter a valid phone number with country code">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success" id="addPatientBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Add Patient to Queue
+                    </button>
+                </form>
+            </div>
+
+            <!-- WhatsApp Link Display -->
+            <div id="whatsappLinkContainer" class="whatsapp-link-container hidden">
+                <h3>WhatsApp Link Generated</h3>
+                <div class="link-actions">
+                    <input type="text" id="whatsappLink" readonly class="link-input">
+                    <button class="btn btn-success" id="copyLinkBtn">Copy Link</button>
+                    <a href="#" id="openWhatsAppBtn" target="_blank" class="btn btn-primary">Open WhatsApp</a>
+                </div>
+                <p class="link-note">Send this link to the patient to track their position</p>
+            </div>
+
+            <div class="action-bar">
+                <button id="callNextBtn" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    Call Next Patient
+                </button>
+                <button id="clearQueueBtn" class="btn btn-danger">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                    Clear Queue
+                </button>
+            </div>
+
+            <div class="queue-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Total in Queue</span>
+                    <span class="stat-value" id="totalInQueue">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Est. Total Wait</span>
+                    <span class="stat-value" id="totalWaitTime">0 min</span>
+                </div>
+            </div>
+
+            <div class="queue-list-container">
+                <h2>Current Queue</h2>
+                <div id="queueList" class="queue-list">
+                    <!-- Queue items will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
