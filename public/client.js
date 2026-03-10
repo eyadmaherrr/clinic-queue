@@ -616,7 +616,7 @@ function initScreenPage() {
                 hour: '2-digit', 
                 minute: '2-digit',
                 second: '2-digit',
-                hour12: false
+                hour12: true
             };
             datetime.textContent = now.toLocaleTimeString('en-US', options);
         }
