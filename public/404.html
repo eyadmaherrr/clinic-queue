@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Clinic Queue System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .error-container {
+            text-align: center;
+            background: white;
+            padding: 50px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(10, 26, 63, 0.1);
+            border: 2px solid #0a1a3f;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 6rem;
+            margin: 0;
+            color: #0a1a3f;
+            line-height: 1;
+        }
+        h2 {
+            color: #0a1a3f;
+            margin: 20px 0;
+        }
+        p {
+            color: #4a5568;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #0a1a3f 0%, #1a2a5a 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(255, 215, 0, 0.3);
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #e6c200 100%);
+            color: #0a1a3f;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>404</h1>
+        <h2>Page Not Found</h2>
+        <p>The page you're looking for doesn't exist or took a little too long to load.</p>
+        <div>
+            <a href="/login" class="btn">Go to Login</a>
+            <a href="/track" class="btn btn-gold">Track Queue</a>
+        </div>
+    </div>
+    <script>
+        // Auto-refresh once if this is a cold start
+        if (!sessionStorage.getItem('refreshed')) {
+            sessionStorage.setItem('refreshed', 'true');
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

@@ -21,6 +21,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add this near the top of your server.js, after your middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
+// Handle trailing slashes
+app.use((req, res, next) => {
+    if (req.path.substr(-1) === '/' && req.path.length > 1) {
+        const query = req.url.slice(req.path.length);
+        res.redirect(301, req.path.slice(0, -1) + query);
+    } else {
+        next();
+    }
+});
+
 // Session middleware - FIXED for Render
 app.use(session({
     secret: process.env.SESSION_SECRET || 'clinic-queue-secret-key',
@@ -189,6 +205,11 @@ app.get('/logout', (req, res) => {
 
 // ==================== PAGE ROUTES ====================
 
+// Serve HTML pages explicitly
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 app.get('/dashboard', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
@@ -199,6 +220,12 @@ app.get('/track', (req, res) => {
 
 app.get('/screen', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'screen.html'));
+});
+
+// Add a catch-all route to handle 404s gracefully
+app.use((req, res) => {
+    console.log(`404 - Not Found: ${req.url}`);
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
 // Redirect old view links
@@ -422,3 +449,18 @@ server.listen(PORT, '0.0.0.0', () => {
     }
     console.log('===========================\n');
 });
+
+// Log all registered routes (helpful for debugging)
+function printRoutes() {
+    console.log('\n📋 Registered Routes:');
+    app._router.stack.forEach((middleware) => {
+        if (middleware.route) {
+            const methods = Object.keys(middleware.route.methods).join(', ').toUpperCase();
+            console.log(`   ${methods} ${middleware.route.path}`);
+        }
+    });
+    console.log('');
+}
+
+// Call this after all routes are defined
+setTimeout(printRoutes, 1000);
