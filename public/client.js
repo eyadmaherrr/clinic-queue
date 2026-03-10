@@ -1,7 +1,6 @@
 // Client-side JavaScript for all pages
-// Replace your existing socket initialization with this:
 const socket = io({
-  transports: ['websocket'], // Force WebSocket only for Render
+  transports: ['websocket'],
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
   timeout: 20000
@@ -9,7 +8,6 @@ const socket = io({
 
 // ==================== UTILITY FUNCTIONS ====================
 
-// Format waiting time
 const formatTime = (minutes) => {
     if (minutes === null || minutes === undefined) return 'N/A';
     if (minutes < 0) return 'Now';
@@ -21,7 +19,6 @@ const formatTime = (minutes) => {
     return `${hours}h ${remainingMins}m`;
 };
 
-// Play notification sound
 const playNotification = () => {
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -46,7 +43,6 @@ const playNotification = () => {
     }
 };
 
-// Animation helper for numbers
 const animateNumber = (elementId, finalValue, duration = 1000) => {
     const element = document.getElementById(elementId);
     if (!element) return;
@@ -73,7 +69,6 @@ const animateNumber = (elementId, finalValue, duration = 1000) => {
     requestAnimationFrame(updateNumber);
 };
 
-// Show temporary notification
 const showNotification = (message, type = 'success') => {
     const notification = document.createElement('div');
     notification.className = `notification-message ${type}`;
@@ -91,6 +86,7 @@ const showNotification = (message, type = 'success') => {
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         z-index: 1000;
         animation: slideInRight 0.3s ease;
+        border: 2px solid var(--gold);
     `;
     
     document.body.appendChild(notification);
@@ -103,7 +99,6 @@ const showNotification = (message, type = 'success') => {
     }, 3000);
 };
 
-// Add animation styles
 const addAnimationStyles = () => {
     if (document.getElementById('animation-styles')) return;
     
@@ -161,7 +156,155 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     addAnimationStyles();
+    
+    // Modal event listeners
+    const closeBtn = document.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeEditModal);
+    }
+    
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeEditModal);
+    }
+    
+    const saveBtn = document.getElementById('saveEditBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveEdit);
+    }
+    
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('editModal');
+        if (e.target === modal) {
+            closeEditModal();
+        }
+    });
 });
+
+// ==================== GLOBAL FUNCTIONS ====================
+
+// Global variables for modal
+let currentEditId = null;
+
+// Open edit modal
+window.openEditModal = (patientId, patientName, patientPhone) => {
+    currentEditId = patientId;
+    document.getElementById('editPatientId').value = patientId;
+    document.getElementById('editPatientName').value = patientName;
+    document.getElementById('editPatientPhone').value = patientPhone;
+    document.getElementById('editModal').classList.remove('hidden');
+};
+
+// Close edit modal
+window.closeEditModal = () => {
+    document.getElementById('editModal').classList.add('hidden');
+    currentEditId = null;
+};
+
+// Save edit
+window.saveEdit = () => {
+    const patientId = currentEditId;
+    const newName = document.getElementById('editPatientName').value.trim();
+    const newPhone = document.getElementById('editPatientPhone').value.trim();
+    
+    if (!newName || !newPhone) {
+        showNotification('Please fill all fields', 'error');
+        return;
+    }
+    
+    fetch('/api/edit-patient', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patientId, name: newName, phoneNumber: newPhone })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Patient updated successfully', 'success');
+            closeEditModal();
+        } else {
+            showNotification(data.error || 'Failed to update patient', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to update patient', 'error');
+    });
+};
+
+// Send WhatsApp message
+window.sendWhatsApp = (phoneNumber, patientName, queueNumber) => {
+    // Format phone number (remove any non-digits)
+    const formattedPhone = phoneNumber.replace(/\D/g, '');
+    
+    const message = encodeURIComponent(
+        `🏥 *Dr Maher Mahmoud Clinics*\n\n` +
+        `Hello *${patientName}*,\n\n` +
+        `*Your Queue Number:* #${queueNumber}\n\n` +
+        `You can track your position here:\n${window.location.origin}/track\n\n` +
+        `Thank you for choosing our clinic!`
+    );
+    
+    window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
+};
+
+// Move patient up in queue
+window.moveUp = (patientId) => {
+    const queueList = document.getElementById('queueList');
+    const items = Array.from(queueList.children);
+    const index = items.findIndex(item => item.dataset.id == patientId);
+    
+    if (index > 0) {
+        // Swap with previous item
+        const orderedIds = items.map(item => parseInt(item.dataset.id));
+        [orderedIds[index - 1], orderedIds[index]] = [orderedIds[index], orderedIds[index - 1]];
+        
+        fetch('/api/reorder-queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Patient moved up', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to move patient', 'error');
+        });
+    }
+};
+
+// Move patient down in queue
+window.moveDown = (patientId) => {
+    const queueList = document.getElementById('queueList');
+    const items = Array.from(queueList.children);
+    const index = items.findIndex(item => item.dataset.id == patientId);
+    
+    if (index < items.length - 1) {
+        // Swap with next item
+        const orderedIds = items.map(item => parseInt(item.dataset.id));
+        [orderedIds[index], orderedIds[index + 1]] = [orderedIds[index + 1], orderedIds[index]];
+        
+        fetch('/api/reorder-queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Patient moved down', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to move patient', 'error');
+        });
+    }
+};
 
 // ==================== DASHBOARD PAGE ====================
 
@@ -172,6 +315,8 @@ function initDashboardPage() {
     const currentServingDisplay = document.getElementById('currentServingDisplay');
     const totalInQueue = document.getElementById('totalInQueue');
     const totalWaitTime = document.getElementById('totalWaitTime');
+    const priorityCount = document.getElementById('priorityCount');
+    const missedCount = document.getElementById('missedCount');
     const addPatientForm = document.getElementById('addPatientForm');
     const whatsappContainer = document.getElementById('whatsappLinkContainer');
     const whatsappLink = document.getElementById('whatsappLink');
@@ -180,13 +325,15 @@ function initDashboardPage() {
     
     if (!callNextBtn) return;
     
-    // Add patient form handler
+    updateAddPatientForm();
+    
     if (addPatientForm) {
         addPatientForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const name = document.getElementById('patientName').value.trim();
             const phone = document.getElementById('phoneNumber').value.trim();
+            const isPriority = document.getElementById('priorityCheckbox')?.checked || false;
             const addBtn = document.getElementById('addPatientBtn');
             
             if (!name || !phone) {
@@ -203,7 +350,7 @@ function initDashboardPage() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, phoneNumber: phone })
+                    body: JSON.stringify({ name, phoneNumber: phone, isPriority })
                 });
                 
                 const data = await response.json();
@@ -215,6 +362,7 @@ function initDashboardPage() {
                     
                     document.getElementById('patientName').value = '';
                     document.getElementById('phoneNumber').value = '';
+                    document.getElementById('priorityCheckbox').checked = false;
                     
                     showNotification('Patient added successfully!', 'success');
                 } else {
@@ -225,12 +373,11 @@ function initDashboardPage() {
                 showNotification('Failed to add patient', 'error');
             } finally {
                 addBtn.disabled = false;
-                addBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Add Patient to Queue';
+                addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Patient to Queue';
             }
         });
     }
     
-    // Copy link button
     if (copyLinkBtn) {
         copyLinkBtn.addEventListener('click', () => {
             whatsappLink.select();
@@ -239,13 +386,11 @@ function initDashboardPage() {
         });
     }
     
-    // Call next button handler
     callNextBtn.addEventListener('click', () => {
         socket.emit('call-next');
         showNotification('Next patient called', 'success');
     });
     
-    // Clear queue button handler
     clearQueueBtn.addEventListener('click', () => {
         if (confirm('⚠️ Are you sure you want to clear the entire queue? This action cannot be undone.')) {
             socket.emit('clear-queue');
@@ -253,7 +398,6 @@ function initDashboardPage() {
         }
     });
     
-    // Make removePatient function globally available
     window.removePatient = (patientId) => {
         if (confirm('Are you sure you want to remove this patient from the queue?')) {
             socket.emit('remove-patient', patientId);
@@ -261,33 +405,66 @@ function initDashboardPage() {
         }
     };
     
-    // Socket event handlers
-    socket.on('queue-update', (data) => {
-        if (data.queue.length === 0) {
-            queueList.innerHTML = '<div class="empty-queue-message">No patients in queue</div>';
-        } else {
-            queueList.innerHTML = data.queue.map((patient, index) => `
-                <div class="queue-item" data-id="${patient.id}" style="animation: slideIn 0.3s ease; animation-delay: ${index * 0.05}s">
-                    <div class="patient-info">
-                        <span class="patient-number">#${patient.id}</span>
-                        <div class="patient-details">
-                            <span class="patient-name">${patient.name}</span>
-                            <span class="patient-phone">📞 ${patient.displayPhone || patient.phoneNumber}</span>
-                            <span class="patient-time">🕒 ${new Date(patient.joinTime).toLocaleTimeString()}</span>
-                        </div>
-                    </div>
-                    <div class="patient-status">
-                        <span class="patient-wait">⏱️ ${formatTime(patient.waitingTime)}</span>
-                        <span class="patient-position">📍 Position: ${patient.position}</span>
-                    </div>
-                    <button class="remove-btn" onclick="removePatient(${patient.id})" title="Remove patient">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 6L6 18M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            `).join('');
+    window.togglePriority = (patientId) => {
+        fetch('/api/toggle-priority', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patientId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.isPriority ? '⭐ Priority ON' : 'Priority OFF', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to toggle priority', 'error');
+        });
+    };
+
+    window.markMissed = (patientId) => {
+        if (confirm('Mark this patient as missed? They will turn gray and be skipped.')) {
+            fetch('/api/mark-missed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patientId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Patient marked as missed', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to mark as missed', 'error');
+            });
         }
+    };
+
+    window.restorePatient = (patientId) => {
+        if (confirm('Restore this patient? They will be next in line.')) {
+            fetch('/api/restore-patient', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patientId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Patient restored', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to restore patient', 'error');
+            });
+        }
+    };
+    
+    socket.on('queue-update', (data) => {
+        renderQueueList(data.queue);
         
         if (currentServingDisplay) {
             if (data.currentServing) {
@@ -307,6 +484,16 @@ function initDashboardPage() {
             const totalWait = data.queue.reduce((sum, patient) => sum + (patient.waitingTime || 0), 0);
             totalWaitTime.textContent = formatTime(totalWait);
         }
+        
+        if (priorityCount) {
+            const priorityPatients = data.queue.filter(p => p.isPriority && !p.isMissed).length;
+            priorityCount.textContent = priorityPatients;
+        }
+        
+        if (missedCount) {
+            const missedPatients = data.queue.filter(p => p.isMissed).length;
+            missedCount.textContent = missedPatients;
+        }
     });
     
     socket.on('next-called', (data) => {
@@ -314,12 +501,107 @@ function initDashboardPage() {
     });
 }
 
+function renderQueueList(queue) {
+    const queueList = document.getElementById('queueList');
+    if (!queueList) return;
+    
+    if (queue.length === 0) {
+        queueList.innerHTML = '<div class="empty-queue-message">No patients in queue</div>';
+        return;
+    }
+    
+    queueList.innerHTML = queue.map((patient, index) => {
+        const isMissed = patient.isMissed;
+        const isPriority = patient.isPriority;
+        
+        let cardClass = '';
+        if (isMissed) cardClass = 'missed-patient';
+        else if (isPriority) cardClass = 'priority-patient';
+        
+        // Format phone number for display
+        const displayPhone = patient.displayPhone || patient.phoneNumber || `+20${patient.phoneDigits}`;
+        
+        return `
+        <div class="queue-item ${cardClass}" data-id="${patient.id}">
+            <div class="move-controls">
+                <button class="move-btn move-up" onclick="moveUp(${patient.id})" ${index === 0 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+                <button class="move-btn move-down" onclick="moveDown(${patient.id})" ${index === queue.length - 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="patient-info">
+                <span class="patient-number">#${patient.id}</span>
+                <div class="patient-details">
+                    <span class="patient-name">${patient.name}</span>
+                    <span class="patient-phone"><i class="fas fa-phone-alt"></i> ${displayPhone}</span>
+                    <span class="patient-time"><i class="far fa-clock"></i> ${new Date(patient.joinTime).toLocaleTimeString()}</span>
+                    ${isPriority && !isMissed ? '<span class="priority-badge"><i class="fas fa-star"></i> Priority</span>' : ''}
+                    ${isMissed ? '<span class="missed-badge"><i class="fas fa-hourglass"></i> Missed</span>' : ''}
+                </div>
+            </div>
+            <div class="patient-status">
+                <span class="patient-wait"><i class="fas fa-hourglass-half"></i> ${formatTime(patient.waitingTime)}</span>
+                <span class="patient-position"><i class="fas fa-map-marker-alt"></i> Position: ${patient.position}</span>
+            </div>
+            <div class="patient-actions">
+                <button class="action-btn whatsapp-btn" onclick="sendWhatsApp('${patient.phoneDigits}', '${patient.name}', ${patient.id})" title="Send WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button class="action-btn edit-btn" onclick="openEditModal(${patient.id}, '${patient.name}', '${patient.phoneDigits}')" title="Edit patient">
+                    <i class="fas fa-edit"></i>
+                </button>
+                ${!isMissed ? `
+                    <button class="action-btn priority-btn ${isPriority ? 'active' : ''}" 
+                            onclick="togglePriority(${patient.id})" 
+                            title="${isPriority ? 'Remove priority' : 'Mark as priority'}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                    <button class="action-btn missed-btn" onclick="markMissed(${patient.id})" title="Mark as missed">
+                        <i class="fas fa-clock"></i>
+                    </button>
+                ` : `
+                    <button class="action-btn restore-btn" onclick="restorePatient(${patient.id})" title="Restore to queue">
+                        <i class="fas fa-undo-alt"></i>
+                    </button>
+                `}
+                <button class="action-btn remove-btn" onclick="removePatient(${patient.id})" title="Remove patient">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
+}
+
+function updateAddPatientForm() {
+    const form = document.getElementById('addPatientForm');
+    if (!form) return;
+    
+    if (document.getElementById('priorityCheckbox')) return;
+    
+    const priorityDiv = document.createElement('div');
+    priorityDiv.className = 'form-group priority-checkbox';
+    priorityDiv.innerHTML = `
+        <label>
+            <input type="checkbox" id="priorityCheckbox">
+            <i class="fas fa-star" style="color: var(--gold);"></i> Mark as Priority Patient
+        </label>
+    `;
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    form.insertBefore(priorityDiv, submitBtn);
+}
+
 // ==================== SCREEN PAGE ====================
 
 function initScreenPage() {
     const nowServing = document.getElementById('nowServing');
+    const nowServingName = document.getElementById('nowServingName');
     const nextPatients = document.getElementById('nextPatients');
     const totalInQueue = document.getElementById('totalInQueue');
+    const priorityCount = document.getElementById('priorityCount');
+    const missedCount = document.getElementById('missedCount');
     const estimatedWait = document.getElementById('estimatedWait');
     const datetime = document.getElementById('datetime');
     
@@ -352,41 +634,49 @@ function initScreenPage() {
             
             if (data.currentServing) {
                 nowServing.textContent = data.currentServing.id.toString().padStart(3, '0');
+                if (nowServingName) {
+                    nowServingName.textContent = data.currentServing.name;
+                }
             } else {
                 nowServing.textContent = '---';
+                if (nowServingName) {
+                    nowServingName.textContent = '';
+                }
             }
         }
         
-        const nextFive = data.queue.slice(0, 5);
+        const nextEight = data.queue.slice(0, 8);
+        
         if (nextPatients) {
-            if (nextFive.length === 0) {
+            if (nextEight.length === 0) {
                 nextPatients.innerHTML = '';
                 for (let i = 0; i < 5; i++) {
                     nextPatients.innerHTML += `
-                        <div class="next-patient-item empty" style="animation: slideInRight 0.5s ease; animation-delay: ${i * 0.1}s">
+                        <div class="next-patient-item empty">
                             <span class="next-patient-number">---</span>
                             <span class="next-patient-name">No patient in queue</span>
                         </div>
                     `;
                 }
             } else {
-                nextPatients.innerHTML = nextFive.map((patient, index) => `
-                    <div class="next-patient-item" style="animation: slideInRight 0.5s ease; animation-delay: ${index * 0.1}s">
-                        <span class="next-patient-number">#${patient.id.toString().padStart(3, '0')}</span>
-                        <span class="next-patient-name">${patient.name}</span>
-                    </div>
-                `).join('');
-                
-                if (nextFive.length < 5) {
-                    for (let i = nextFive.length; i < 5; i++) {
-                        nextPatients.innerHTML += `
-                            <div class="next-patient-item empty" style="animation: slideInRight 0.5s ease; animation-delay: ${i * 0.1}s">
-                                <span class="next-patient-number">---</span>
-                                <span class="next-patient-name">Available</span>
-                            </div>
-                        `;
+                nextPatients.innerHTML = nextEight.map((patient, index) => {
+                    let patientClass = '';
+                    
+                    if (patient.isMissed) {
+                        patientClass = 'missed';
+                    } else if (patient.isPriority) {
+                        patientClass = 'priority';
                     }
-                }
+                    
+                    const isNext = index === 0 && !patient.isMissed ? ' (Next)' : '';
+                    
+                    return `
+                        <div class="next-patient-item ${patientClass}">
+                            <span class="next-patient-number">#${patient.id.toString().padStart(3, '0')}</span>
+                            <span class="next-patient-name">${patient.name}${isNext}</span>
+                        </div>
+                    `;
+                }).join('');
             }
         }
         
@@ -394,8 +684,19 @@ function initScreenPage() {
             totalInQueue.textContent = data.queueLength;
         }
         
+        if (priorityCount) {
+            const priorityPatients = data.queue.filter(p => p.isPriority && !p.isMissed).length;
+            priorityCount.textContent = priorityPatients;
+        }
+        
+        if (missedCount) {
+            const missedPatients = data.queue.filter(p => p.isMissed).length;
+            missedCount.textContent = missedPatients;
+        }
+        
         if (estimatedWait) {
-            const totalWait = data.queueLength * AVERAGE_CONSULTATION_TIME;
+            const activePatients = data.queue.filter(p => !p.isMissed).length;
+            const totalWait = activePatients * AVERAGE_CONSULTATION_TIME;
             estimatedWait.textContent = formatTime(totalWait);
         }
     });
@@ -411,7 +712,7 @@ function initScreenPage() {
     });
 }
 
-// ==================== TRACK PAGE (Fixed) ====================
+// ==================== TRACK PAGE ====================
 
 function initTrackPage() {
     const phoneEntryForm = document.getElementById('phoneEntryForm');
@@ -429,25 +730,20 @@ function initTrackPage() {
     let socketConnection = null;
     let isTracking = false;
 
-    // Auto-focus on phone input
     phoneInput.focus();
 
-    // Track button click handler
     trackBtn.addEventListener('click', trackPatient);
     
-    // Enter key handler
     phoneInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             trackPatient();
         }
     });
 
-    // Phone input validation - only allow digits
     phoneInput.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '');
     });
 
-    // Back button handler
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             resetToEntryForm();
@@ -464,7 +760,6 @@ function initTrackPage() {
             return;
         }
 
-        // Remove any non-digit characters
         phone = phone.replace(/\D/g, '');
         
         if (phone.length < 3) {
@@ -472,7 +767,6 @@ function initTrackPage() {
             return;
         }
 
-        // Show loading, hide form and error
         phoneEntryForm.classList.add('hidden');
         loadingState.classList.remove('hidden');
         trackError.classList.add('hidden');
@@ -480,9 +774,6 @@ function initTrackPage() {
         
         isTracking = true;
 
-        console.log('Tracking phone:', phone); // Debug log
-
-        // Fetch patient data
         fetch(`/api/patient/${phone}`)
             .then(response => {
                 if (!response.ok) {
@@ -493,8 +784,6 @@ function initTrackPage() {
                 return response.json();
             })
             .then(data => {
-                console.log('Patient data received:', data); // Debug log
-                
                 loadingState.classList.add('hidden');
                 
                 if (data.error) {
@@ -504,16 +793,10 @@ function initTrackPage() {
                     return;
                 }
 
-                // Store patient info
                 currentPatientId = data.id;
-
-                // Show status
                 queueStatus.classList.remove('hidden');
-                
-                // Update display
                 updatePatientDisplay(data);
 
-                // Show success message
                 if (trackSuccess) {
                     trackSuccess.textContent = 'Patient found! Tracking your position...';
                     trackSuccess.classList.remove('hidden');
@@ -522,7 +805,6 @@ function initTrackPage() {
                     }, 3000);
                 }
 
-                // Setup socket for real-time updates
                 setupSocketForTrack();
             })
             .catch(error => {
@@ -538,7 +820,6 @@ function initTrackPage() {
         trackError.textContent = message;
         trackError.classList.remove('hidden');
         
-        // Auto hide after 3 seconds
         setTimeout(() => {
             trackError.classList.add('hidden');
         }, 3000);
@@ -572,7 +853,6 @@ function initTrackPage() {
 
         if (queueLengthEl) queueLengthEl.textContent = data.queueLength || '0';
 
-        // Update progress bar
         if (progressBar && data.queueLength > 0 && data.position) {
             const progress = ((data.queueLength - data.position) / data.queueLength) * 100;
             progressBar.style.width = `${Math.max(0, progress)}%`;
@@ -580,7 +860,6 @@ function initTrackPage() {
     }
 
     function setupSocketForTrack() {
-        // Disconnect existing socket if any
         if (socketConnection) {
             socketConnection.disconnect();
         }
@@ -592,24 +871,18 @@ function initTrackPage() {
         });
 
         socketConnection.on('queue-update', (data) => {
-            console.log('Queue update received:', data); // Debug log
-            
             if (!currentPatientId) return;
             
-            // Find this patient in the queue
             const patient = data.queue.find(p => p.id === currentPatientId);
             
             if (patient) {
-                // Patient still in queue
                 updatePatientDisplay({
                     ...patient,
                     currentServing: data.currentServing,
                     queueLength: data.queueLength
                 });
             } else {
-                // Patient not in queue - check if being served
                 if (data.currentServing && data.currentServing.id === currentPatientId) {
-                    // Patient is currently being served
                     const currentServingEl = document.getElementById('currentServing');
                     if (currentServingEl) {
                         currentServingEl.innerHTML = 
@@ -630,14 +903,12 @@ function initTrackPage() {
                     
                     showTrackNotification('It\'s your turn! Please proceed to the consultation room.');
                 } else {
-                    // Patient no longer in queue (served or removed)
                     showServedMessage();
                 }
             }
         });
 
         socketConnection.on('next-called', (data) => {
-            console.log('Next called:', data); // Debug log
             if (data.patient && data.patient.id === currentPatientId) {
                 playNotification();
                 showTrackNotification('It\'s your turn! Please proceed to the consultation room.');
@@ -667,7 +938,6 @@ function initTrackPage() {
                 </div>
             `;
             
-            // Reattach back button handler
             const newBackBtn = document.getElementById('backBtn');
             if (newBackBtn) {
                 newBackBtn.addEventListener('click', resetToEntryForm);
@@ -676,13 +946,11 @@ function initTrackPage() {
     }
 
     function resetToEntryForm() {
-        // Disconnect socket
         if (socketConnection) {
             socketConnection.disconnect();
             socketConnection = null;
         }
         
-        // Reset UI
         queueStatus.classList.add('hidden');
         phoneEntryForm.classList.remove('hidden');
         phoneInput.value = '';
@@ -690,7 +958,6 @@ function initTrackPage() {
         currentPatientId = null;
         isTracking = false;
         
-        // Clear any errors
         if (trackError) trackError.classList.add('hidden');
     }
 

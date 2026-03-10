@@ -1333,3 +1333,534 @@ h2 {
     border: 1px solid #c3e6cb;
     animation: fadeIn 0.3s ease;
 }
+
+/* Priority Checkbox */
+.priority-checkbox {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #fff9e6;
+    border-radius: 10px;
+    border: 1px solid #FFD700;
+}
+
+.priority-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.priority-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #FFD700;
+}
+
+/* Priority Patient Card */
+.queue-item.priority-patient {
+    background: linear-gradient(135deg, #fff9e6, #fff2d0);
+    border-left: 5px solid #FFD700;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+/* Missed Patient Card */
+.queue-item.missed-patient {
+    background-color: #f5f5f5;
+    opacity: 0.8;
+    border-left: 5px solid #9ca3af;
+}
+
+.queue-item.missed-patient .patient-name {
+    color: #6b7280;
+    text-decoration: line-through;
+}
+
+/* Badges */
+.priority-badge {
+    background-color: #FFD700;
+    color: #0a1a3f;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.missed-badge {
+    background-color: #9ca3af;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+/* Action Buttons */
+.patient-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.priority-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+}
+
+.priority-btn.active {
+    opacity: 1;
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 5px gold);
+}
+
+.priority-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.missed-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+}
+
+.missed-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.restore-btn {
+    background: linear-gradient(135deg, #0a1a3f, #1a2a5a);
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.restore-btn:hover {
+    background: linear-gradient(135deg, #1a2a5a, #2a3a6a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(10, 26, 63, 0.3);
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+    background-color: rgba(220, 38, 38, 0.1);
+    transform: scale(1.1);
+}
+
+/* ==================== SCREEN INDICATORS (ADD ONLY THESE) ==================== */
+
+/* Header Indicators */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background-color: var(--bg-primary);
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.indicator-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.priority-dot {
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold-glow);
+}
+
+.missed-dot {
+    background-color: #9ca3af;
+    box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
+}
+
+/* Queue Info Counts */
+.queue-info-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    background-color: var(--accent);
+    border-radius: 40px;
+    padding: 20px 25px;
+    margin-top: 20px;
+    border: 3px solid var(--gold);
+}
+
+.queue-info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+}
+
+.queue-info-item .info-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.queue-info-item .info-value {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.priority-count {
+    color: var(--gold) !important;
+    text-shadow: 0 0 10px var(--gold-glow);
+}
+
+.missed-count {
+    color: #e0e0e0 !important;
+    opacity: 0.9;
+}
+
+/* Responsive fix for smaller screens */
+@media (max-width: 1200px) {
+    .queue-info-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .header-right {
+        gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-right {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+/* Priority Patient Card with Star */
+.next-patient-item.priority {
+    background: linear-gradient(135deg, #fff9e6, #fff2d0);
+    border-left: 5px solid var(--gold);
+    position: relative;
+}
+
+.next-patient-item.priority::after {
+    content: "⭐";
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 1.2rem;
+    opacity: 0.5;
+}
+
+/* Missed Patient Card with Clock */
+.next-patient-item.missed {
+    background-color: #f5f5f5;
+    opacity: 0.8;
+    border-left: 5px solid #9ca3af;
+    position: relative;
+}
+
+.next-patient-item.missed::after {
+    content: "⏰";
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 1.2rem;
+    opacity: 0.5;
+}
+
+.next-patient-item.missed .next-patient-name {
+    color: #6b7280;
+    text-decoration: line-through;
+}
+
+/* Indicator icons for patient cards */
+.indicator-icon {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 1.2rem;
+    opacity: 0.5;
+}
+
+.next-patient-item {
+    position: relative; /* Needed for absolute positioning */
+}
+
+/* Make sure missed patients stand out */
+.next-patient-item.missed {
+    background-color: #f0f0f0;
+    opacity: 0.8;
+    border-left: 5px solid #9ca3af;
+}
+
+.next-patient-item.missed .next-patient-name {
+    color: #6b7280;
+    text-decoration: line-through;
+}
+
+/* Priority patients */
+.next-patient-item.priority {
+    background: linear-gradient(135deg, #fff9e6, #fff2d0);
+    border-left: 5px solid var(--gold);
+}
+
+/* Position indicator for first in queue */
+.next-patient-item .next-patient-name {
+    flex: 1;
+    position: relative;
+}
+
+/* Make the top patient slightly more prominent */
+.next-patient-item:first-child .next-patient-number {
+    color: var(--success);
+    font-weight: 900;
+}
+
+/* Move Controls */
+.move-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-right: 10px;
+}
+
+.move-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 5px;
+    transition: var(--transition);
+    font-size: 1.1rem;
+}
+
+.move-btn:hover:not(:disabled) {
+    color: var(--gold);
+    background-color: var(--bg-card);
+    transform: scale(1.1);
+}
+
+.move-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Action Buttons */
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: var(--transition);
+    font-size: 1.2rem;
+}
+
+.whatsapp-btn {
+    color: #25D366;
+}
+
+.whatsapp-btn:hover {
+    background-color: rgba(37, 211, 102, 0.1);
+    transform: scale(1.1);
+}
+
+.edit-btn {
+    color: var(--accent);
+}
+
+.edit-btn:hover {
+    background-color: var(--blue-glow);
+    transform: scale(1.1);
+}
+
+.priority-btn {
+    color: var(--gold);
+    opacity: 0.5;
+}
+
+.priority-btn.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.priority-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.missed-btn {
+    color: #9ca3af;
+}
+
+.missed-btn:hover {
+    background-color: rgba(156, 163, 175, 0.1);
+    transform: scale(1.1);
+}
+
+.restore-btn {
+    color: var(--success);
+}
+
+.restore-btn:hover {
+    background-color: var(--gold-glow);
+    transform: scale(1.1);
+}
+
+.remove-btn {
+    color: var(--danger);
+}
+
+.remove-btn:hover {
+    background-color: rgba(220, 38, 38, 0.1);
+    transform: scale(1.1);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal:not(.hidden) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 30px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--gold);
+}
+
+.modal-header h3 {
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+.close-modal {
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.close-modal:hover {
+    color: var(--danger);
+    transform: scale(1.1);
+}
+
+.modal-body {
+    margin-bottom: 25px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #6b7280;
+}
+
+/* Update queue stats */
+.queue-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .queue-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .move-controls {
+        flex-direction: row;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .queue-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .patient-actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}

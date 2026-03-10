@@ -9,10 +9,20 @@
 </head>
 <body class="tv-screen">
     <div class="screen-container">
-        <!-- Simple Header -->
+        <!-- Simple Header with Indicators -->
         <header class="screen-header">
             <h1>Dr Maher Mahmoud Clinics</h1>
-            <div class="datetime" id="datetime"></div>
+            <div class="header-right">
+                <div class="indicator">
+                    <span class="indicator-dot priority-dot"></span>
+                    <span>Priority</span>
+                </div>
+                <div class="indicator">
+                    <span class="indicator-dot missed-dot"></span>
+                    <span>Missed</span>
+                </div>
+                <div class="datetime" id="datetime"></div>
+            </div>
         </header>
 
         <main class="screen-main">
@@ -33,14 +43,22 @@
                 </div>
             </div>
 
-            <!-- Simple Queue Info -->
+            <!-- Queue Info with Counts -->
             <div class="queue-info-bar">
                 <div class="queue-info-item">
-                    <span class="info-label">Total in Queue:</span>
+                    <span class="info-label">Total:</span>
                     <span class="info-value" id="totalInQueue">0</span>
                 </div>
                 <div class="queue-info-item">
-                    <span class="info-label">Est. Wait Time:</span>
+                    <span class="info-label">Priority:</span>
+                    <span class="info-value priority-count" id="priorityCount">0</span>
+                </div>
+                <div class="queue-info-item">
+                    <span class="info-label">Missed:</span>
+                    <span class="info-value missed-count" id="missedCount">0</span>
+                </div>
+                <div class="queue-info-item">
+                    <span class="info-label">Wait:</span>
                     <span class="info-value" id="estimatedWait">0 min</span>
                 </div>
             </div>

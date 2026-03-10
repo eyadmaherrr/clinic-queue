@@ -6,6 +6,7 @@
     <title>Dashboard - Clinic Queue System</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -32,61 +33,69 @@
                                    placeholder="Enter full name" required autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label for="phoneNumber">Phone Number (with country code)</label>
+                            <label for="phoneNumber">Phone Number</label>
                             <input type="tel" id="phoneNumber" name="phoneNumber" 
-                                   placeholder="e.g., +1234567890" required 
+                                   placeholder="e.g., 01012345678" required 
                                    pattern="^\+?[\d\s-]{10,}$"
-                                   title="Please enter a valid phone number with country code">
+                                   title="Please enter a valid Egyptian phone number">
                         </div>
                     </div>
+                    
+                    <!-- Priority Checkbox -->
+                    <div class="form-group priority-checkbox">
+                        <label>
+                            <input type="checkbox" id="priorityCheckbox">
+                            <i class="fas fa-star" style="color: var(--gold);"></i> Mark as Priority Patient
+                        </label>
+                    </div>
+                    
                     <button type="submit" class="btn btn-success" id="addPatientBtn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                        Add Patient to Queue
+                        <i class="fas fa-plus"></i> Add Patient to Queue
                     </button>
                 </form>
             </div>
 
             <!-- WhatsApp Link Display -->
             <div id="whatsappLinkContainer" class="whatsapp-link-container hidden">
-                <h3>WhatsApp Link Generated</h3>
+                <h3><i class="fab fa-whatsapp"></i> WhatsApp Link Generated</h3>
                 <div class="link-actions">
                     <input type="text" id="whatsappLink" readonly class="link-input">
-                    <button class="btn btn-success" id="copyLinkBtn">Copy Link</button>
-                    <a href="#" id="openWhatsAppBtn" target="_blank" class="btn btn-primary">Open WhatsApp</a>
+                    <button class="btn btn-success" id="copyLinkBtn"><i class="fas fa-copy"></i> Copy</button>
+                    <a href="#" id="openWhatsAppBtn" target="_blank" class="btn btn-primary"><i class="fab fa-whatsapp"></i> Open WhatsApp</a>
                 </div>
                 <p class="link-note">Send this link to the patient to track their position</p>
             </div>
 
             <div class="action-bar">
                 <button id="callNextBtn" class="btn btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                    Call Next Patient
+                    <i class="fas fa-arrow-right"></i> Call Next Patient
                 </button>
                 <button id="clearQueueBtn" class="btn btn-danger">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                    </svg>
-                    Clear Queue
+                    <i class="fas fa-trash"></i> Clear Queue
                 </button>
             </div>
 
             <div class="queue-stats">
                 <div class="stat-card">
-                    <span class="stat-label">Total in Queue</span>
+                    <span class="stat-label"><i class="fas fa-users"></i> Total in Queue</span>
                     <span class="stat-value" id="totalInQueue">0</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Est. Total Wait</span>
+                    <span class="stat-label"><i class="fas fa-clock"></i> Est. Total Wait</span>
                     <span class="stat-value" id="totalWaitTime">0 min</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label"><i class="fas fa-star" style="color: var(--gold);"></i> Priority</span>
+                    <span class="stat-value" id="priorityCount">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label"><i class="fas fa-clock" style="color: #9ca3af;"></i> Missed</span>
+                    <span class="stat-value" id="missedCount">0</span>
                 </div>
             </div>
 
             <div class="queue-list-container">
-                <h2>Current Queue</h2>
+                <h2>Current Queue <span class="queue-hint">(Use arrows to reorder)</span></h2>
                 <div id="queueList" class="queue-list">
                     <!-- Queue items will be dynamically added here -->
                 </div>
@@ -94,7 +103,33 @@
         </div>
     </div>
 
+    <!-- Edit Patient Modal -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Patient</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editPatientId">
+                <div class="form-group">
+                    <label for="editPatientName">Patient Name</label>
+                    <input type="text" id="editPatientName" placeholder="Enter patient name">
+                </div>
+                <div class="form-group">
+                    <label for="editPatientPhone">Phone Number</label>
+                    <input type="tel" id="editPatientPhone" placeholder="e.g., 01012345678">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button class="btn btn-success" id="saveEditBtn"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="client.js"></script>
 </body>
 </html>
