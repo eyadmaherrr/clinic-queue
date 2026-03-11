@@ -1,135 +1,213 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Clinic Queue System</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
     <div class="container">
-        <div class="dashboard-container">
-            <div class="dashboard-header">
-                <div>
-                    <h1>Reception Dashboard</h1>
-                    <div class="current-serving-header">
-                        <span>Currently Serving:</span>
-                        <span class="serving-number" id="currentServingDisplay">None</span>
-                    </div>
-                </div>
-                <a href="/logout" class="btn btn-danger logout-btn">Logout</a>
+      <div class="dashboard-container">
+        <div class="dashboard-header">
+          <div>
+            <h1>Reception Dashboard</h1>
+            <div class="current-serving-header">
+              <span>Currently Serving:</span>
+              <span class="serving-number" id="currentServingDisplay"
+                >None</span
+              >
             </div>
-
-            <!-- Add Patient Form -->
-            <div class="add-patient-section">
-                <h2>Add New Patient</h2>
-                <form id="addPatientForm" class="add-patient-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="patientName">Patient Name</label>
-                            <input type="text" id="patientName" name="patientName" 
-                                   placeholder="Enter full name" required autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="phoneNumber">Phone Number</label>
-                            <input type="tel" id="phoneNumber" name="phoneNumber" 
-                                   placeholder="e.g., 01012345678" required 
-                                   pattern="^\+?[\d\s-]{10,}$"
-                                   title="Please enter a valid Egyptian phone number">
-                        </div>
-                    </div>
-                    
-                    <!-- Priority Checkbox -->
-                    <div class="form-group priority-checkbox">
-                        <label>
-                            <input type="checkbox" id="priorityCheckbox">
-                            <i class="fas fa-star" style="color: var(--gold);"></i> Mark as Priority Patient
-                        </label>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success" id="addPatientBtn">
-                        <i class="fas fa-plus"></i> Add Patient to Queue
-                    </button>
-                </form>
-            </div>
-
-            <!-- WhatsApp Link Display -->
-            <div id="whatsappLinkContainer" class="whatsapp-link-container hidden">
-                <h3><i class="fab fa-whatsapp"></i> WhatsApp Link Generated</h3>
-                <div class="link-actions">
-                    <input type="text" id="whatsappLink" readonly class="link-input">
-                    <button class="btn btn-success" id="copyLinkBtn"><i class="fas fa-copy"></i> Copy</button>
-                    <a href="#" id="openWhatsAppBtn" target="_blank" class="btn btn-primary"><i class="fab fa-whatsapp"></i> Open WhatsApp</a>
-                </div>
-                <p class="link-note">Send this link to the patient to track their position</p>
-            </div>
-
-            <div class="action-bar">
-                <button id="callNextBtn" class="btn btn-primary">
-                    <i class="fas fa-arrow-right"></i> Call Next Patient
-                </button>
-                <button id="clearQueueBtn" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Clear Queue
-                </button>
-            </div>
-
-            <div class="queue-stats">
-                <div class="stat-card">
-                    <span class="stat-label"><i class="fas fa-users"></i> Total in Queue</span>
-                    <span class="stat-value" id="totalInQueue">0</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label"><i class="fas fa-clock"></i> Est. Total Wait</span>
-                    <span class="stat-value" id="totalWaitTime">0 min</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label"><i class="fas fa-star" style="color: var(--gold);"></i> Priority</span>
-                    <span class="stat-value" id="priorityCount">0</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label"><i class="fas fa-clock" style="color: #9ca3af;"></i> Missed</span>
-                    <span class="stat-value" id="missedCount">0</span>
-                </div>
-            </div>
-
-            <div class="queue-list-container">
-                <h2>Current Queue <span class="queue-hint">(Use arrows to reorder)</span></h2>
-                <div id="queueList" class="queue-list">
-                    <!-- Queue items will be dynamically added here -->
-                </div>
-            </div>
+          </div>
+          <a href="/logout" class="btn btn-danger logout-btn">Logout</a>
         </div>
+
+        <!-- Add Patient Form -->
+        <div class="add-patient-section">
+          <h2>Add New Patient</h2>
+          <form id="addPatientForm" class="add-patient-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="patientName">Patient Name</label>
+                <input
+                  type="text"
+                  id="patientName"
+                  name="patientName"
+                  placeholder="Enter full name"
+                  required
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+<input type="tel" id="phoneNumber" name="phoneNumber" 
+       placeholder="e.g., 01012345678" required 
+       pattern="[0-9+\-\s]{10,}"
+       title="Please enter a valid phone number (at least 10 digits)">
+              </div>
+              <!-- Add these fields inside the add-patient-form, after phone number -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="patientArea"
+                    ><i class="fas fa-map-marker-alt"></i> Area/District</label
+                  >
+                  <input
+                    type="text"
+                    id="patientArea"
+                    name="patientArea"
+                    placeholder="e.g., 6th October, Dokki, Maadi"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="lastVisitDate"
+                    ><i class="fas fa-calendar"></i> Last Visit</label
+                  >
+                  <input type="date" id="lastVisitDate" name="lastVisitDate" />
+                  <small class="form-hint">Leave empty for new patients</small>
+                </div>
+              </div>
+              </div>
+
+              <div class="checkbox-group">
+                <label>
+                  <input type="checkbox" id="isNewPatient"/>
+                  <i class="fas fa-user-plus"></i> New Patient (no previous
+                  visits)
+                </label>
+              </div>
+            </div>
+
+            <!-- Priority Checkbox -->
+            <div class="form-group priority-checkbox">
+              <label>
+                <input type="checkbox" id="priorityCheckbox" />
+                <i class="fas fa-star" style="color: var(--gold)"></i> Mark as
+                Priority Patient
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-success" id="addPatientBtn">
+              <i class="fas fa-plus"></i> Add Patient to Queue
+            </button>
+          </form>
+        </div>
+
+        <!-- WhatsApp Link Display -->
+        <div id="whatsappLinkContainer" class="whatsapp-link-container hidden">
+          <h3><i class="fab fa-whatsapp"></i> WhatsApp Link Generated</h3>
+          <div class="link-actions">
+            <input type="text" id="whatsappLink" readonly class="link-input" />
+            <button class="btn btn-success" id="copyLinkBtn">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+            <a
+              href="#"
+              id="openWhatsAppBtn"
+              target="_blank"
+              class="btn btn-primary"
+              ><i class="fab fa-whatsapp"></i> Open WhatsApp</a
+            >
+          </div>
+          <p class="link-note">
+            Send this link to the patient to track their position
+          </p>
+        </div>
+
+        <div class="action-bar">
+          <button id="callNextBtn" class="btn btn-primary">
+            <i class="fas fa-arrow-right"></i> Call Next Patient
+          </button>
+          <button id="clearQueueBtn" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Clear Queue
+          </button>
+        </div>
+
+        <div class="queue-stats">
+          <div class="stat-card">
+            <span class="stat-label"
+              ><i class="fas fa-users"></i> Total in Queue</span
+            >
+            <span class="stat-value" id="totalInQueue">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label"
+              ><i class="fas fa-clock"></i> Est. Total Wait</span
+            >
+            <span class="stat-value" id="totalWaitTime">0 min</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label"
+              ><i class="fas fa-star" style="color: var(--gold)"></i>
+              Priority</span
+            >
+            <span class="stat-value" id="priorityCount">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label"
+              ><i class="fas fa-clock" style="color: #9ca3af"></i> Missed</span
+            >
+            <span class="stat-value" id="missedCount">0</span>
+          </div>
+        </div>
+
+        <div class="queue-list-container">
+          <h2>
+            Current Queue
+            <span class="queue-hint">(Use arrows to reorder)</span>
+          </h2>
+          <div id="queueList" class="queue-list">
+            <!-- Queue items will be dynamically added here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Edit Patient Modal -->
     <div id="editModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Patient</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="editPatientId">
-                <div class="form-group">
-                    <label for="editPatientName">Patient Name</label>
-                    <input type="text" id="editPatientName" placeholder="Enter patient name">
-                </div>
-                <div class="form-group">
-                    <label for="editPatientPhone">Phone Number</label>
-                    <input type="tel" id="editPatientPhone" placeholder="e.g., 01012345678">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
-                <button class="btn btn-success" id="saveEditBtn"><i class="fas fa-save"></i> Save Changes</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-edit"></i> Edit Patient</h3>
+          <span class="close-modal">&times;</span>
         </div>
+        <div class="modal-body">
+          <input type="hidden" id="editPatientId" />
+          <div class="form-group">
+            <label for="editPatientName">Patient Name</label>
+            <input
+              type="text"
+              id="editPatientName"
+              placeholder="Enter patient name"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editPatientPhone">Phone Number</label>
+            <input
+              type="tel"
+              id="editPatientPhone"
+              placeholder="e.g., 01012345678"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button class="btn btn-success" id="saveEditBtn">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+        </div>
+      </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="client.js"></script>
-</body>
+  </body>
 </html>

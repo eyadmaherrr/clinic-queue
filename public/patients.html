@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Records - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-container">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div>
+                    <h1><i class="fas fa-notes-medical"></i> Patient Records</h1>
+                    <p class="text-secondary">View and manage all patient history</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/dashboard" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Queue
+                    </a>
+                    <a href="/logout" class="btn btn-danger logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-section">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input" 
+                           placeholder="Search by name, phone, or area...">
+                </div>
+                <div class="stats-badge">
+                    <span id="totalPatients">0</span> Total Patients
+                </div>
+            </div>
+
+            <!-- Patients Table -->
+            <div class="patients-table-container">
+                <table class="patients-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Area</th>
+                            <th>First Visit</th>
+                            <th>Last Visit</th>
+                            <th>Total Visits</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsTableBody">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Details Modal -->
+    <div id="patientModal" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-user"></i> <span id="modalPatientName">Patient Details</span></h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="patient-info-grid">
+                    <div class="info-box">
+                        <label>Phone Number</label>
+                        <span id="modalPatientPhone">-</span>
+                    </div>
+                    <div class="info-box">
+                        <label>Area</label>
+                        <span id="modalPatientArea">-</span>
+                    </div>
+                    <div class="info-box">
+                        <label>First Visit</label>
+                        <span id="modalFirstVisit">-</span>
+                    </div>
+                    <div class="info-box">
+                        <label>Last Visit</label>
+                        <span id="modalLastVisit">-</span>
+                    </div>
+                    <div class="info-box">
+                        <label>Total Visits</label>
+                        <span id="modalTotalVisits">-</span>
+                    </div>
+                </div>
+                
+                <h4>Visit History</h4>
+                <div class="visit-history">
+                    <table class="visits-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Queue #</th>
+                                <th>Wait Time</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="visitsTableBody">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePatientModal()">Close</button>
+                <button class="btn btn-primary" onclick="sendWhatsAppFromModal()">
+                    <i class="fab fa-whatsapp"></i> Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="patients.js"></script>
+</body>
+</html>

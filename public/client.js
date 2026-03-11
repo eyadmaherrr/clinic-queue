@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initScreenPage();
     } else if (path === '/track' || path === '/track.html') {
         initTrackPage();
+    } else if (path === '/doctor' || path === '/doctor.html') {
+        initDoctorPage();
+    } else if (path === '/patients' || path === '/patients.html') {
+        initPatientsPage();
     }
     
     addAnimationStyles();
@@ -334,10 +338,19 @@ function initDashboardPage() {
             const name = document.getElementById('patientName').value.trim();
             const phone = document.getElementById('phoneNumber').value.trim();
             const isPriority = document.getElementById('priorityCheckbox')?.checked || false;
+            const area = document.getElementById('patientArea')?.value.trim() || 'Unknown';
+            const lastVisitDate = document.getElementById('lastVisitDate')?.value || null;
+            const isNewPatient = document.getElementById('isNewPatient')?.checked || true;
+            
             const addBtn = document.getElementById('addPatientBtn');
             
             if (!name || !phone) {
                 showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (!area) {
+                showNotification('Please enter the patient\'s area', 'error');
                 return;
             }
             
@@ -350,7 +363,14 @@ function initDashboardPage() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, phoneNumber: phone, isPriority })
+                    body: JSON.stringify({ 
+                        name, 
+                        phoneNumber: phone, 
+                        isPriority,
+                        area,
+                        lastVisitDate,
+                        isNewPatient
+                    })
                 });
                 
                 const data = await response.json();
@@ -360,9 +380,13 @@ function initDashboardPage() {
                     openWhatsAppBtn.href = data.whatsappLink;
                     whatsappContainer.classList.remove('hidden');
                     
+                    // Clear all form fields
                     document.getElementById('patientName').value = '';
                     document.getElementById('phoneNumber').value = '';
+                    document.getElementById('patientArea').value = '';
+                    document.getElementById('lastVisitDate').value = '';
                     document.getElementById('priorityCheckbox').checked = false;
+                    document.getElementById('isNewPatient').checked = true;
                     
                     showNotification('Patient added successfully!', 'success');
                 } else {
@@ -374,6 +398,110 @@ function initDashboardPage() {
             } finally {
                 addBtn.disabled = false;
                 addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Patient to Queue';
+            }
+        });
+    }
+    
+    // Auto-detect patient history when phone number loses focus
+    const phoneInput = document.getElementById('phoneNumber');
+    const lastVisitInput = document.getElementById('lastVisitDate');
+    const isNewCheckbox = document.getElementById('isNewPatient');
+    const patientStatusText = document.getElementById('patientStatusText');
+    const areaInput = document.getElementById('patientArea');
+    const visitHint = document.getElementById('visitHint');
+
+    if (phoneInput) {
+        phoneInput.addEventListener('blur', async function() {
+            const phone = this.value.trim();
+            
+            if (phone.length < 10) return;
+            
+            // Show loading state
+            const originalBg = this.style.backgroundColor;
+            this.style.backgroundColor = '#fff9e6';
+            if (visitHint) {
+                visitHint.textContent = 'Checking patient history...';
+                visitHint.style.color = 'var(--text-secondary)';
+            }
+            
+            try {
+                // Format phone number (remove non-digits)
+                const formattedPhone = phone.replace(/\D/g, '');
+                
+                const response = await fetch(`/api/check-patient/${formattedPhone}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.found) {
+                    // Returning patient
+                    if (lastVisitInput) {
+                        lastVisitInput.value = data.lastVisitDate || '';
+                        lastVisitInput.readOnly = true;
+                    }
+                    if (isNewCheckbox) {
+                        isNewCheckbox.checked = false;
+                        isNewCheckbox.disabled = true;
+                    }
+                    if (patientStatusText) {
+                        patientStatusText.textContent = 'Returning Patient';
+                    }
+                    if (areaInput && data.area) {
+                        areaInput.value = data.area;
+                    }
+                    if (visitHint) {
+                        visitHint.textContent = `✅ Patient found! Last visit: ${data.lastVisitDate || 'Unknown'}`;
+                        visitHint.style.color = 'var(--success)';
+                    }
+                } else {
+                    // New patient
+                    if (lastVisitInput) {
+                        lastVisitInput.value = '';
+                        lastVisitInput.readOnly = false;
+                    }
+                    if (isNewCheckbox) {
+                        isNewCheckbox.checked = true;
+                        isNewCheckbox.disabled = true;
+                    }
+                    if (patientStatusText) {
+                        patientStatusText.textContent = 'New Patient';
+                    }
+                    if (visitHint) {
+                        visitHint.textContent = '🆕 New patient - please enter area';
+                        visitHint.style.color = 'var(--text-secondary)';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking patient:', error);
+                if (visitHint) {
+                    visitHint.textContent = '❌ Error checking history. Please try again.';
+                    visitHint.style.color = 'var(--danger)';
+                }
+                
+                // Reset fields on error
+                if (lastVisitInput) {
+                    lastVisitInput.value = '';
+                    lastVisitInput.readOnly = false;
+                }
+                if (isNewCheckbox) {
+                    isNewCheckbox.checked = true;
+                    isNewCheckbox.disabled = true;
+                }
+                if (patientStatusText) {
+                    patientStatusText.textContent = 'New Patient';
+                }
+            } finally {
+                this.style.backgroundColor = originalBg;
+            }
+        });
+        
+        // Also check when Enter is pressed
+        phoneInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
             }
         });
     }
@@ -537,6 +665,7 @@ function renderQueueList(queue) {
                     <span class="patient-name">${patient.name}</span>
                     <span class="patient-phone"><i class="fas fa-phone-alt"></i> ${displayPhone}</span>
                     <span class="patient-time"><i class="far fa-clock"></i> ${new Date(patient.joinTime).toLocaleTimeString()}</span>
+                    ${patient.area ? `<span class="patient-area"><i class="fas fa-map-marker-alt"></i> ${patient.area}</span>` : ''}
                     ${isPriority && !isMissed ? '<span class="priority-badge"><i class="fas fa-star"></i> Priority</span>' : ''}
                     ${isMissed ? '<span class="missed-badge"><i class="fas fa-hourglass"></i> Missed</span>' : ''}
                 </div>
@@ -578,19 +707,42 @@ function updateAddPatientForm() {
     const form = document.getElementById('addPatientForm');
     if (!form) return;
     
-    if (document.getElementById('priorityCheckbox')) return;
+    // Check if fields already exist
+    if (document.getElementById('patientArea')) return;
     
-    const priorityDiv = document.createElement('div');
-    priorityDiv.className = 'form-group priority-checkbox';
-    priorityDiv.innerHTML = `
+    // Create area and date row
+    const areaRow = document.createElement('div');
+    areaRow.className = 'form-row';
+    areaRow.innerHTML = `
+        <div class="form-group">
+            <label for="patientArea"><i class="fas fa-map-marker-alt"></i> Area/District</label>
+            <input type="text" id="patientArea" name="patientArea" 
+                   placeholder="e.g., 6th October, Dokki, Maadi" required>
+        </div>
+        <div class="form-group">
+            <label for="lastVisitDate"><i class="fas fa-calendar"></i> Last Visit</label>
+            <input type="date" id="lastVisitDate" name="lastVisitDate" readonly>
+            <small class="form-hint" id="visitHint">Enter phone number to auto-fill</small>
+        </div>
+    `;
+    
+    // Create new patient checkbox
+    const checkboxGroup = document.createElement('div');
+    checkboxGroup.className = 'checkbox-group';
+    checkboxGroup.innerHTML = `
         <label>
-            <input type="checkbox" id="priorityCheckbox">
-            <i class="fas fa-star" style="color: var(--gold);"></i> Mark as Priority Patient
+            <input type="checkbox" id="isNewPatient" checked disabled>
+            <i class="fas fa-user-plus"></i> <span id="patientStatusText">New Patient</span>
         </label>
     `;
     
+    // Get the priority checkbox and submit button
+    const priorityCheckbox = document.querySelector('.priority-checkbox');
     const submitBtn = form.querySelector('button[type="submit"]');
-    form.insertBefore(priorityDiv, submitBtn);
+    
+    // Insert the new fields in the correct order
+    form.insertBefore(areaRow, priorityCheckbox);
+    form.insertBefore(checkboxGroup, priorityCheckbox);
 }
 
 // ==================== SCREEN PAGE ====================
@@ -973,7 +1125,390 @@ function initTrackPage() {
     }
 }
 
+// ==================== DOCTOR PAGE ====================
+
+function initDoctorPage() {
+    const nowServing = document.getElementById('nowServing');
+    const nowServingName = document.getElementById('nowServingName');
+    const nowServingArea = document.getElementById('nowServingArea');
+    const nowServingStatus = document.getElementById('nowServingStatus');
+    const nextPatients = document.getElementById('nextPatients');
+    const todayCount = document.getElementById('todayCount');
+    
+    if (!nowServing) return;
+    
+    socket.on('queue-update', (data) => {
+        // Update current patient
+        if (data.currentServing) {
+            nowServing.textContent = `#${data.currentServing.id.toString().padStart(3, '0')}`;
+            if (nowServingName) nowServingName.textContent = data.currentServing.name;
+            if (nowServingArea) nowServingArea.textContent = data.currentServing.area || 'Unknown';
+            if (nowServingStatus) {
+                nowServingStatus.textContent = data.currentServing.isPriority ? '⭐ Priority' : 'Regular';
+                nowServingStatus.className = data.currentServing.isPriority ? 'priority' : '';
+            }
+        } else {
+            nowServing.textContent = '---';
+            if (nowServingName) nowServingName.textContent = 'No patient';
+            if (nowServingArea) nowServingArea.textContent = '';
+            if (nowServingStatus) nowServingStatus.textContent = '';
+        }
+        
+        // Update next patients
+        const nextFive = data.queue.slice(0, 5);
+        if (nextPatients) {
+            if (nextFive.length === 0) {
+                nextPatients.innerHTML = '<div class="empty-next">No patients waiting</div>';
+            } else {
+                nextPatients.innerHTML = nextFive.map((patient, index) => `
+                    <div class="next-patient-item-small ${patient.isPriority ? 'priority' : ''}">
+                        <span class="next-position">${index + 1}</span>
+                        <span class="next-name">${patient.name}</span>
+                        <span class="next-area">${patient.area || 'Unknown'}</span>
+                        ${patient.isPriority ? '<span class="priority-star">⭐</span>' : ''}
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Update today's count
+        if (todayCount) {
+            todayCount.textContent = data.queueLength;
+        }
+    });
+}
+
+// ==================== PATIENTS PAGE ====================
+
+function initPatientsPage() {
+    loadPatients();
+    
+    // Search input with debounce
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                loadPatients(searchInput.value);
+            }, 500);
+        });
+    }
+    
+    // Modal close button
+    const closeBtn = document.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePatientModal);
+    }
+    
+    // Click outside modal to close
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('patientModal');
+        if (e.target === modal) {
+            closePatientModal();
+        }
+    });
+}
+
+// Patients page variables
+let currentPage = 1;
+let totalPages = 1;
+let currentPatientId = null;
+
+function loadPatients(search = '') {
+    const url = `/api/patients?page=${currentPage}&limit=20&search=${encodeURIComponent(search)}`;
+    
+    // Show loading state
+    const tbody = document.getElementById('patientsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="empty-table">
+                <div class="spinner"></div>
+                <p>Loading patients...</p>
+            </td>
+        </tr>
+    `;
+    
+    fetch(url)
+        .then(async response => {
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('API response not OK:', response.status, text.substring(0, 200));
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API response data:', data);
+            
+            // Check if we have a valid response
+            if (data && typeof data === 'object') {
+                // Handle case where patients array might be missing
+                const patients = Array.isArray(data.patients) ? data.patients : [];
+                const pagination = data.pagination || { page: 1, limit: 20, total: 0, pages: 0 };
+                
+                renderPatientsTable(patients);
+                renderPagination(pagination);
+                const totalEl = document.getElementById('totalPatients');
+                if (totalEl) totalEl.textContent = pagination.total || 0;
+            } else {
+                console.error('Unexpected API response structure:', data);
+                showPatientsError('Invalid data format received from server');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading patients:', error);
+            showPatientsError(error.message);
+        });
+}
+
+function showPatientsError(message) {
+    const tbody = document.getElementById('patientsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="empty-table">
+                <i class="fas fa-exclamation-triangle" style="color: var(--danger); font-size: 3rem;"></i>
+                <p style="color: var(--danger);">Failed to load patients: ${message}</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+function renderPatientsTable(patients) {
+    const tbody = document.getElementById('patientsTableBody');
+    if (!tbody) return;
+    
+    if (!patients || patients.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-table">
+                    <i class="fas fa-users" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <p>No patients found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = patients.map(patient => {
+        // Safely access properties with defaults
+        const id = patient.id || '-';
+        const name = patient.name || 'Unknown';
+        const phone = patient.phone_digits ? '+' + patient.phone_digits : '-';
+        const area = patient.area || '-';
+        const firstVisit = patient.first_visit_date ? formatDate(patient.first_visit_date) : '-';
+        const lastVisit = patient.last_visit_date ? formatDate(patient.last_visit_date) : '-';
+        const totalVisits = patient.total_visits || 1;
+        
+        return `
+        <tr onclick="viewPatientDetails(${id})" style="cursor: pointer;">
+            <td>#${id}</td>
+            <td><strong>${escapeHtml(name)}</strong></td>
+            <td>${phone}</td>
+            <td>${escapeHtml(area)}</td>
+            <td>${firstVisit}</td>
+            <td>${lastVisit}</td>
+            <td><span class="visit-badge">${totalVisits}</span></td>
+            <td>
+                <button class="action-btn" onclick="event.stopPropagation(); viewPatientDetails(${id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn whatsapp-btn" onclick="event.stopPropagation(); sendWhatsAppToPatient('${patient.phone_digits || ''}', '${escapeHtml(name)}')">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+            </td>
+        </tr>
+    `}).join('');
+}
+
+function renderPagination(pagination) {
+    const container = document.getElementById('pagination');
+    if (!container) return;
+    
+    currentPage = pagination.page || 1;
+    totalPages = pagination.pages || 1;
+    
+    let html = '<div class="pagination-controls">';
+    
+    // Previous button
+    html += `<button class="page-btn" onclick="changePatientsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i>
+    </button>`;
+    
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        html += `<button class="page-btn" onclick="changePatientsPage(1)">1</button>`;
+        if (startPage > 2) html += `<span class="page-dots">...</span>`;
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" 
+            onclick="changePatientsPage(${i})">${i}</button>`;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span class="page-dots">...</span>`;
+        html += `<button class="page-btn" onclick="changePatientsPage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    // Next button
+    html += `<button class="page-btn" onclick="changePatientsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+        <i class="fas fa-chevron-right"></i>
+    </button>`;
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function changePatientsPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    const search = document.getElementById('searchInput')?.value || '';
+    loadPatients(search);
+}
+
+function viewPatientDetails(patientId) {
+    currentPatientId = patientId;
+    
+    fetch(`/api/patients/${patientId}`)
+        .then(response => response.json())
+        .then(data => {
+            const patient = data.patient;
+            const visits = data.visits || [];
+            
+            document.getElementById('modalPatientName').textContent = patient.name || 'Unknown';
+            document.getElementById('modalPatientPhone').textContent = patient.phone_digits ? '+' + patient.phone_digits : '-';
+            document.getElementById('modalPatientArea').textContent = patient.area || '-';
+            document.getElementById('modalFirstVisit').textContent = formatDate(patient.first_visit_date);
+            document.getElementById('modalLastVisit').textContent = formatDate(patient.last_visit_date);
+            document.getElementById('modalTotalVisits').textContent = patient.total_visits || 1;
+            
+            renderVisitsTable(visits);
+            
+            document.getElementById('patientModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error loading patient details:', error);
+            alert('Failed to load patient details');
+        });
+}
+
+function renderVisitsTable(visits) {
+    const tbody = document.getElementById('visitsTableBody');
+    if (!tbody) return;
+    
+    if (!visits || visits.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-table">No visit history</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = visits.map(visit => `
+        <tr>
+            <td>${formatDateTime(visit.join_time)}</td>
+            <td>#${visit.queue_number || '-'}</td>
+            <td>${formatTime(visit.waiting_time)}</td>
+            <td>${visit.is_priority ? '⭐ Priority' : 'Regular'}</td>
+            <td>
+                <span class="status-badge ${visit.is_missed ? 'missed' : 'completed'}">
+                    ${visit.is_missed ? 'Missed' : 'Completed'}
+                </span>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function closePatientModal() {
+    document.getElementById('patientModal').classList.add('hidden');
+    currentPatientId = null;
+}
+
+function sendWhatsAppFromModal() {
+    if (!currentPatientId) return;
+    
+    fetch(`/api/patients/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            const patient = data.patient;
+            sendWhatsAppToPatient(patient.phone_digits, patient.name);
+        });
+}
+
+function sendWhatsAppToPatient(phoneDigits, name) {
+    if (!phoneDigits) {
+        alert('No phone number available');
+        return;
+    }
+    
+    const formattedPhone = phoneDigits.replace(/\D/g, '');
+    const message = encodeURIComponent(
+        `🏥 *Dr Maher Mahmoud Clinics*\n\n` +
+        `Hello *${name || 'Patient'}*,\n\n` +
+        `This is a message from our clinic.\n` +
+        `You can track your queue position here:\n${window.location.origin}/track`
+    );
+    
+    window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
+}
+
+// Helper functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-EG', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch {
+        return dateString;
+    }
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-EG', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch {
+        return dateString;
+    }
+}
+
 // Make functions globally available
 window.showNotification = showNotification;
 window.formatTime = formatTime;
 window.playNotification = playNotification;
+window.sendWhatsAppToPatient = sendWhatsAppToPatient;
+window.viewPatientDetails = viewPatientDetails;
+window.closePatientModal = closePatientModal;
+window.sendWhatsAppFromModal = sendWhatsAppFromModal;
+window.changePatientsPage = changePatientsPage;

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Screen - Clinic Queue System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Doctor Header -->
+        <div class="doctor-header">
+            <div>
+                <h1>Dr. Maher Mahmoud</h1>
+                <p class="specialty">Dermatologist</p>
+            </div>
+            <div class="doctor-stats">
+                <div class="stat">
+                    <span class="stat-label">Patients Today</span>
+                    <span class="stat-value" id="todayCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">In Queue</span>
+                    <span class="stat-value" id="queueCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Patient Section -->
+        <div class="current-patient-section">
+            <h2><i class="fas fa-user-md"></i> Current Patient</h2>
+            <div id="noPatientMessage" class="no-patient hidden">
+                <i class="fas fa-user-check"></i>
+                <p>No patient currently being served</p>
+            </div>
+            
+            <div id="currentPatientCard" class="patient-card current-patient hidden">
+                <div class="patient-header">
+                    <div>
+                        <span class="patient-number-badge" id="currentNumber">#001</span>
+                        <span class="patient-name-large" id="currentName">Ahmed Hassan</span>
+                    </div>
+                    <span class="patient-status" id="currentStatus">Priority</span>
+                </div>
+                
+                <div class="patient-details-grid">
+                    <div class="detail-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <span class="detail-label">Phone</span>
+                            <span class="detail-value" id="currentPhone">01012345678</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <span class="detail-label">Area</span>
+                            <span class="detail-value" id="currentArea">6th October</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <div>
+                            <span class="detail-label">Last Visit</span>
+                            <span class="detail-value" id="currentLastVisit">2026-02-15</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-history"></i>
+                        <div>
+                            <span class="detail-label">Patient Type</span>
+                            <span class="detail-value" id="currentType">Returning</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Patients -->
+        <div class="next-patients-section">
+            <h2><i class="fas fa-users"></i> Next in Line</h2>
+            <div class="next-patients-list" id="nextPatientsList">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="doctor.js"></script>
+</body>
+</html>
