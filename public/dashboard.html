@@ -11,11 +11,43 @@
     />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      href="https://cdnjsflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
   </head>
   <body>
     <div class="container">
+      <!-- Navigation Bar -->
+      <nav class="dashboard-nav">
+        <div class="nav-brand">
+          <i class="fas fa-clinic-medical"></i>
+          <span>Dr Maher Mahmoud Clinics</span>
+        </div>
+        <div class="nav-links">
+          <a href="/dashboard" class="nav-link active">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="/screen" class="nav-link" target="_blank">
+            <i class="fas fa-tv"></i>
+            <span>TV Screen</span>
+          </a>
+          <a href="/doctor" class="nav-link">
+            <i class="fas fa-user-md"></i>
+            <span>Doctor</span>
+          </a>
+          <a href="/patients" class="nav-link">
+            <i class="fas fa-database"></i>
+            <span>Patient Records</span>
+          </a>
+        </div>
+        <div class="nav-user">
+          <span class="user-name">Admin</span>
+          <a href="/login" class="btn-logout" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </nav>
+
       <div class="dashboard-container">
         <div class="dashboard-header">
           <div>
@@ -27,7 +59,7 @@
               >
             </div>
           </div>
-          <a href="/logout" class="btn btn-danger logout-btn">Logout</a>
+          <!-- Logout button is now in the navigation, so you can remove this one -->
         </div>
 
         <!-- Add Patient Form -->
@@ -48,42 +80,42 @@
               </div>
               <div class="form-group">
                 <label for="phoneNumber">Phone Number</label>
-<input type="tel" id="phoneNumber" name="phoneNumber" 
-       placeholder="e.g., 01012345678" required 
-       pattern="[0-9+\-\s]{10,}"
-       title="Please enter a valid phone number (at least 10 digits)">
+                <input type="tel" id="phoneNumber" name="phoneNumber" 
+                       placeholder="e.g., 01012345678" required 
+                       pattern="[0-9+\-\s]{10,}"
+                       title="Please enter a valid phone number (at least 10 digits)">
               </div>
-              <!-- Add these fields inside the add-patient-form, after phone number -->
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="patientArea"
-                    ><i class="fas fa-map-marker-alt"></i> Area/District</label
-                  >
-                  <input
-                    type="text"
-                    id="patientArea"
-                    name="patientArea"
-                    placeholder="e.g., 6th October, Dokki, Maadi"
-                    required
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="lastVisitDate"
-                    ><i class="fas fa-calendar"></i> Last Visit</label
-                  >
-                  <input type="date" id="lastVisitDate" name="lastVisitDate" />
-                  <small class="form-hint">Leave empty for new patients</small>
-                </div>
+            </div>
+            
+            <!-- Area and Date Row -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="patientArea"
+                  ><i class="fas fa-map-marker-alt"></i> Area/District</label
+                >
+                <input
+                  type="text"
+                  id="patientArea"
+                  name="patientArea"
+                  placeholder="e.g., 6th October, Dokki, Maadi"
+                  required
+                />
               </div>
+              <div class="form-group">
+                <label for="lastVisitDate"
+                  ><i class="fas fa-calendar"></i> Last Visit</label
+                >
+                <input type="date" id="lastVisitDate" name="lastVisitDate" />
+                <small class="form-hint" id="visitHint">Enter phone number to auto-fill</small>
               </div>
+            </div>
 
-              <div class="checkbox-group">
-                <label>
-                  <input type="checkbox" id="isNewPatient"/>
-                  <i class="fas fa-user-plus"></i> New Patient (no previous
-                  visits)
-                </label>
-              </div>
+            <!-- New Patient Checkbox -->
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" id="isNewPatient" checked disabled />
+                <i class="fas fa-user-plus"></i> <span id="patientStatusText">New Patient</span>
+              </label>
             </div>
 
             <!-- Priority Checkbox -->

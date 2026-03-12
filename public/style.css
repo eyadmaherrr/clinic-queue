@@ -2499,3 +2499,136 @@ textarea:focus {
         grid-template-columns: 1fr;
     }
 }
+
+/* Navigation Bar */
+.dashboard-nav {
+    background: var(--accent);
+    padding: 15px 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 5px 15px var(--blue-glow);
+    border: 2px solid var(--gold);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.nav-brand i {
+    font-size: 1.8rem;
+    color: var(--gold);
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    color: white;
+    text-decoration: none;
+    transition: var(--transition);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link:hover {
+    background: var(--gold);
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.nav-link.active {
+    background: var(--gold);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.nav-link i {
+    font-size: 1.2rem;
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-name {
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 15px;
+    border-radius: 30px;
+}
+
+.btn-logout {
+    color: white;
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-logout:hover {
+    background: var(--danger);
+    transform: scale(1.1);
+}
+
+/* Responsive navigation */
+@media (max-width: 768px) {
+    .dashboard-nav {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-link span {
+        display: none;
+    }
+    
+    .nav-link i {
+        font-size: 1.5rem;
+    }
+    
+    .nav-brand {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .nav-user {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links {
+        gap: 10px;
+    }
+    
+    .nav-link {
+        padding: 8px;
+    }
+}
