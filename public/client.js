@@ -404,6 +404,7 @@ function initDashboardPage() {
     
     // Auto-detect patient history when phone number loses focus
     const phoneInput = document.getElementById('phoneNumber');
+    const nameInput = document.getElementById('patientName');
     const lastVisitInput = document.getElementById('lastVisitDate');
     const isNewCheckbox = document.getElementById('isNewPatient');
     const patientStatusText = document.getElementById('patientStatusText');
@@ -437,7 +438,10 @@ function initDashboardPage() {
                 const data = await response.json();
                 
                 if (data.found) {
-                    // Returning patient
+                    // Returning patient - autofill all fields
+                    if (nameInput) {
+                        nameInput.value = data.name || '';
+                    }
                     if (lastVisitInput) {
                         lastVisitInput.value = data.lastVisitDate || '';
                         lastVisitInput.readOnly = true;
@@ -456,8 +460,13 @@ function initDashboardPage() {
                         visitHint.textContent = `✅ Patient found! Last visit: ${data.lastVisitDate || 'Unknown'}`;
                         visitHint.style.color = 'var(--success)';
                     }
+                    
+                    // Optional: Show a quick notification
+                    if (typeof showNotification === 'function') {
+                        showNotification(`Welcome back, ${data.name}!`, 'success');
+                    }
                 } else {
-                    // New patient
+                    // New patient - clear fields
                     if (lastVisitInput) {
                         lastVisitInput.value = '';
                         lastVisitInput.readOnly = false;
@@ -470,9 +479,10 @@ function initDashboardPage() {
                         patientStatusText.textContent = 'New Patient';
                     }
                     if (visitHint) {
-                        visitHint.textContent = '🆕 New patient - please enter area';
+                        visitHint.textContent = '🆕 New patient - please enter details';
                         visitHint.style.color = 'var(--text-secondary)';
                     }
+                    // Don't clear name - reception might have already typed it
                 }
             } catch (error) {
                 console.error('Error checking patient:', error);

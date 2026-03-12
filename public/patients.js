@@ -133,7 +133,9 @@ function renderPatientsTable(patients) {
         const phone = patient.phone_digits ? '+' + patient.phone_digits : '-';
         const area = patient.area || '-';
         const firstVisit = patient.first_visit_date ? formatDate(patient.first_visit_date) : '-';
-        const lastVisit = patient.last_visit_date ? formatDate(patient.last_visit_date) : '-';
+        // Use last_visit_date from database
+        const lastVisit = patient.last_visit_date ? formatDate(patient.last_visit_date) : 
+                         (patient.last_visit ? formatDate(patient.last_visit) : '-');
         const totalVisits = patient.total_visits || 1;
         
         html += `
