@@ -4,7 +4,7 @@ const socketIo = require("socket.io");
 const path = require("path");
 const session = require("express-session");
 const fetch = require("node-fetch");
-const { dbHelpers, pool } = require('./db-pg');
+const { dbHelpers, pool, dbReady } = require('./db-pg');
 
 const app = express();
 const server = http.createServer(app);
@@ -62,6 +62,10 @@ const COUNTRY_CODE = "20";
 // ==================== DATABASE LOAD ON STARTUP ====================
 async function loadSavedQueue() {
     try {
+        // Wait for database tables to be ready
+        await dbReady;
+        console.log('✅ Database ready, loading queue...');
+        
         const saved = await dbHelpers.loadQueue();
         if (saved) {
             queue = saved.queue;
@@ -239,8 +243,8 @@ app.get("/view/:token", (req, res) => {
 
 // ==================== API ROUTES ====================
 
-// Check patient history by phone number - FIXED last visit
-app.get('/api/check-patient/:phone', requireAuth, (req, res) => {
+// Check patient history by phone number - UPDATED FOR POSTGRESQL
+app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
     try {
         let phone = req.params.phone;
         phone = phone.replace(/\D/g, '');
@@ -252,26 +256,21 @@ app.get('/api/check-patient/:phone', requireAuth, (req, res) => {
         const phoneDigits = formatPhoneNumber(phone);
         console.log('Checking patient history for:', phoneDigits);
         
-        db.get('SELECT * FROM patients WHERE phone_digits = ?', [phoneDigits], (err, patient) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            
-            if (patient) {
-                console.log('Patient found:', patient);
-                res.json({
-                    found: true,
-                    patientId: patient.id,
-                    name: patient.name,
-                    area: patient.area,
-                    lastVisitDate: patient.last_visit_date, // Make sure this is returned
-                    totalVisits: patient.total_visits
-                });
-            } else {
-                res.json({ found: false });
-            }
-        });
+        const patient = await dbHelpers.findPatientByPhone(phoneDigits);
+        
+        if (patient) {
+            console.log('Patient found:', patient);
+            res.json({
+                found: true,
+                patientId: patient.id,
+                name: patient.name,
+                area: patient.area,
+                lastVisitDate: patient.last_visit_date,
+                totalVisits: patient.total_visits
+            });
+        } else {
+            res.json({ found: false });
+        }
     } catch (error) {
         console.error('Error checking patient:', error);
         res.status(500).json({ error: 'Server error' });
@@ -332,9 +331,8 @@ app.get("/api/patient/:phone", (req, res) => {
   }
 });
 
-// Get all patients from database (with pagination) - UPDATED FOR sqlite3 PROMISES
-// Get all patients from database (with pagination) - FIXED for visit counts
-app.get('/api/patients', requireAuth, (req, res) => {
+// Get all patients from database (with pagination) - UPDATED FOR POSTGRESQL
+app.get('/api/patients', requireAuth, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
@@ -343,75 +341,18 @@ app.get('/api/patients', requireAuth, (req, res) => {
         
         console.log('Fetching patients - page:', page, 'search:', search);
         
-        // Base query to get patients with their visit counts
-        let query = `
-            SELECT p.*, 
-                   COUNT(qh.id) as total_visits,
-                   MAX(qh.join_time) as last_visit_date
-            FROM patients p
-            LEFT JOIN queue_history qh ON p.id = qh.patient_id
-        `;
+        const result = await dbHelpers.getAllPatients(limit, offset, search);
         
-        let countQuery = `SELECT COUNT(*) as total FROM patients`;
-        let params = [];
-        let whereClause = '';
+        const totalPages = Math.ceil(result.total / limit);
         
-        if (search) {
-            whereClause = ` WHERE p.name LIKE ? OR p.phone_digits LIKE ? OR p.area LIKE ?`;
-            const searchPattern = `%${search}%`;
-            params = [searchPattern, searchPattern, searchPattern];
-        }
-        
-        query += whereClause;
-        query += ` GROUP BY p.id ORDER BY p.id DESC LIMIT ? OFFSET ?`;
-        
-        // Get total count
-        db.get(countQuery + (whereClause ? whereClause : ''), params.length ? params : [], (err, countResult) => {
-            if (err) {
-                console.error('Error counting patients:', err);
-                return res.status(500).json({ 
-                    error: 'Database error', 
-                    message: err.message,
-                    patients: [],
-                    pagination: { page: 1, limit: 20, total: 0, pages: 0 }
-                });
+        res.json({
+            patients: result.patients,
+            pagination: {
+                page,
+                limit,
+                total: result.total,
+                pages: totalPages
             }
-            
-            const totalPatients = countResult ? countResult.total : 0;
-            const totalPages = Math.ceil(totalPatients / limit);
-            
-            // Get paginated results
-            const queryParams = [...params, limit, offset];
-            db.all(query, queryParams, (err, patients) => {
-                if (err) {
-                    console.error('Error fetching patients:', err);
-                    return res.status(500).json({ 
-                        error: 'Database error', 
-                        message: err.message,
-                        patients: [],
-                        pagination: { page: 1, limit: 20, total: 0, pages: 0 }
-                    });
-                }
-                
-                // Format the patients data
-                const formattedPatients = patients.map(patient => ({
-                    ...patient,
-                    total_visits: patient.total_visits || 1, // At least 1 (their first visit)
-                    last_visit_date: patient.last_visit_date || patient.first_visit_date || null
-                }));
-                
-                console.log(`Found ${formattedPatients.length} patients`);
-                
-                res.json({
-                    patients: formattedPatients,
-                    pagination: {
-                        page,
-                        limit,
-                        total: totalPatients,
-                        pages: totalPages
-                    }
-                });
-            });
         });
         
     } catch (error) {
@@ -430,8 +371,8 @@ app.get('/api/patients', requireAuth, (req, res) => {
     }
 });
 
-// Get patient details with visit history - FIXED
-app.get('/api/patients/:id', requireAuth, (req, res) => {
+// Get patient details with visit history - UPDATED FOR POSTGRESQL
+app.get('/api/patients/:id', requireAuth, async (req, res) => {
     try {
         const patientId = req.params.id;
         
@@ -441,58 +382,17 @@ app.get('/api/patients/:id', requireAuth, (req, res) => {
             return res.status(400).json({ error: 'Invalid patient ID' });
         }
         
-        // Get patient
-        db.get('SELECT * FROM patients WHERE id = ?', [patientId], (err, patient) => {
-            if (err) {
-                console.error('Database error fetching patient:', err);
-                return res.status(500).json({ error: 'Database error', message: err.message });
-            }
-            
-            if (!patient) {
-                return res.status(404).json({ error: 'Patient not found' });
-            }
-            
-            // Get visit history with proper counting
-            db.all(
-                `SELECT qh.*, 
-                        p.name as patient_name,
-                        p.area as patient_area
-                 FROM queue_history qh
-                 LEFT JOIN patients p ON qh.patient_id = p.id
-                 WHERE qh.patient_id = ? 
-                 ORDER BY qh.join_time DESC 
-                 LIMIT 50`,
-                [patientId],
-                (err, visits) => {
-                    if (err) {
-                        console.error('Database error fetching visits:', err);
-                        return res.status(500).json({ error: 'Database error', message: err.message });
-                    }
-                    
-                    // Get total count of visits
-                    db.get(
-                        'SELECT COUNT(*) as total FROM queue_history WHERE patient_id = ?',
-                        [patientId],
-                        (err, countResult) => {
-                            if (err) {
-                                console.error('Error counting visits:', err);
-                            }
-                            
-                            const totalVisits = countResult ? countResult.total : 1;
-                            
-                            console.log(`Found ${visits ? visits.length : 0} visits for patient ${patientId}`);
-                            
-                            res.json({ 
-                                patient: {
-                                    ...patient,
-                                    total_visits: totalVisits
-                                }, 
-                                visits: visits || []
-                            });
-                        }
-                    );
-                }
-            );
+        const result = await dbHelpers.getPatientWithHistory(patientId);
+        
+        if (!result) {
+            return res.status(404).json({ error: 'Patient not found' });
+        }
+        
+        console.log(`Found ${result.visits.length} visits for patient ${patientId}`);
+        
+        res.json({ 
+            patient: result.patient, 
+            visits: result.visits 
         });
         
     } catch (error) {
@@ -501,8 +401,8 @@ app.get('/api/patients/:id', requireAuth, (req, res) => {
     }
 });
 
-// Add patient - FIXED last visit saving
-app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
+// Add patient - UPDATED FOR POSTGRESQL
+app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
     try {
         console.log('Add patient request received:', req.body);
         
@@ -555,6 +455,35 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
             lastVisitDate: lastVisitDate
         };
 
+        // Save to database
+        try {
+            // Check if patient exists
+            const existing = await dbHelpers.findPatientByPhone(phoneDigits);
+            
+            if (existing) {
+                // Update existing patient
+                await dbHelpers.updatePatientVisit(existing.id);
+                newPatient.patientId = existing.id;
+                newPatient.isNewPatient = false;
+                newPatient.lastVisitDate = existing.last_visit_date;
+                console.log(`✅ Updated patient #${existing.id} with new visit`);
+            } else {
+                // Add new patient
+                const result = await dbHelpers.addPatient({
+                    phoneDigits,
+                    name: name.trim(),
+                    area: area.trim() || 'Unknown',
+                    lastVisitDate: lastVisitDate || new Date().toISOString().split('T')[0]
+                });
+                newPatient.patientId = result.id;
+                newPatient.isNewPatient = true;
+                console.log(`✅ Added new patient to database with ID: ${result.id}`);
+            }
+        } catch (dbError) {
+            console.error('Database error (non-critical):', dbError);
+            // Continue - queue still works
+        }
+
         // Add to queue
         if (isPriority) {
             // Add after existing priority patients
@@ -565,58 +494,6 @@ app.post('/api/add-patient', requireAuth, express.json(), (req, res) => {
         }
         
         patientPhoneMap.set(phoneDigits, newPatient.id);
-        
-        // Try to save to database (don't fail if it doesn't work)
-        try {
-            // Check if patient exists in database
-            db.get('SELECT * FROM patients WHERE phone_digits = ?', [phoneDigits], async (err, existing) => {
-                if (err) {
-                    console.error('Database error checking patient:', err);
-                    return;
-                }
-                
-                const today = new Date().toISOString().split('T')[0];
-                
-                if (existing) {
-                    // Update existing patient
-                    db.run(
-                        `UPDATE patients 
-                         SET last_visit_date = ?, 
-                             total_visits = total_visits + 1,
-                             area = COALESCE(?, area),
-                             name = COALESCE(?, name)
-                         WHERE id = ?`,
-                        [today, area, name, existing.id],
-                        function(updateErr) {
-                            if (updateErr) {
-                                console.error('Error updating patient:', updateErr);
-                            } else {
-                                console.log(`✅ Updated patient #${existing.id} with new visit`);
-                                newPatient.patientId = existing.id;
-                            }
-                        }
-                    );
-                } else {
-                    // Add new patient
-                    db.run(
-                        `INSERT INTO patients (phone_digits, name, area, first_visit_date, last_visit_date, total_visits)
-                         VALUES (?, ?, ?, ?, ?, 1)`,
-                        [phoneDigits, name, area, today, today],
-                        function(insertErr) {
-                            if (insertErr) {
-                                console.error('Error inserting patient:', insertErr);
-                            } else {
-                                console.log(`✅ Added new patient to database with ID: ${this.lastID}`);
-                                newPatient.patientId = this.lastID;
-                            }
-                        }
-                    );
-                }
-            });
-        } catch (dbError) {
-            console.error('Database error (non-critical):', dbError.message);
-            // Continue - queue still works
-        }
 
         // Update all clients
         updateAllClients();
@@ -840,46 +717,40 @@ app.post("/api/reorder-queue", requireAuth, express.json(), (req, res) => {
   }
 });
 
-// Get today's stats
-app.get('/api/today-stats', requireAuth, (req, res) => {
+// Get today's stats - UPDATED FOR POSTGRESQL
+app.get('/api/today-stats', requireAuth, async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
         
-        db.get(
-            'SELECT COUNT(*) as count FROM queue_history WHERE date(join_time) = ?',
-            [today],
-            (err, result) => {
-                if (err) {
-                    return res.json({ todayCount: 0 });
-                }
-                res.json({ todayCount: result ? result.count : 0 });
-            }
+        const result = await pool.query(
+            'SELECT COUNT(*) as count FROM queue_history WHERE DATE(join_time) = $1',
+            [today]
         );
+        
+        res.json({ todayCount: parseInt(result.rows[0].count) || 0 });
     } catch (error) {
+        console.error('Error getting today stats:', error);
         res.json({ todayCount: 0 });
     }
 });
 
-// Get today's history
-app.get('/api/today-history', requireAuth, (req, res) => {
+// Get today's history - UPDATED FOR POSTGRESQL
+app.get('/api/today-history', requireAuth, async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
         
-        db.all(
+        const result = await pool.query(
             `SELECT q.*, p.name, p.area, p.phone_digits 
              FROM queue_history q
              LEFT JOIN patients p ON q.patient_id = p.id
-             WHERE date(q.join_time) = ?
-             ORDER BY q.complete_time DESC LIMIT 20`,
-            [today],
-            (err, history) => {
-                if (err) {
-                    return res.json({ history: [] });
-                }
-                res.json({ history: history || [] });
-            }
+             WHERE DATE(q.join_time) = $1
+             ORDER BY q.complete_time DESC NULLS LAST LIMIT 20`,
+            [today]
         );
+        
+        res.json({ history: result.rows || [] });
     } catch (error) {
+        console.error('Error getting today history:', error);
         res.json({ history: [] });
     }
 });
@@ -888,8 +759,6 @@ app.get('/api/today-history', requireAuth, (req, res) => {
 app.post('/api/complete-patient', requireAuth, express.json(), (req, res) => {
     try {
         const { patientId, patientData, complaint, completedTime } = req.body;
-        
-        // Update queue_history if needed
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ success: false });
@@ -1035,7 +904,10 @@ if (process.env.NODE_ENV === "production") {
 // ==================== START SERVER ====================
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", async () => {
+  // Wait for database to be ready before starting
+  await dbReady;
+  
   console.log("\n=== Clinic Queue System ===");
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🔐 Login page: http://localhost:${PORT}/login`);
@@ -1046,7 +918,7 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`📋 Patients Records: http://localhost:${PORT}/patients`);
   console.log(`🔑 Admin password: 12345 (CHANGE THIS AFTER DEPLOYMENT!)`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`💾 Database: SQLite with better-sqlite3`);
+  console.log(`💾 Database: PostgreSQL on Render`);
   if (process.env.RENDER_EXTERNAL_URL) {
     console.log(`📡 Public URL: ${process.env.RENDER_EXTERNAL_URL}`);
   }

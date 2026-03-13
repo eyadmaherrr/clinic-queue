@@ -4,15 +4,13 @@ const { Pool } = require('pg');
 let pool;
 
 if (process.env.NODE_ENV === 'production') {
-  // In production (Render), use the environment variable
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-      rejectUnauthorized: false // Required for Render's PostgreSQL
+      rejectUnauthorized: false
     }
   });
 } else {
-  // For local development, you can use a local PostgreSQL or keep using SQLite
   pool = new Pool({
     user: 'postgres',
     host: 'localhost',
@@ -31,7 +29,7 @@ pool.connect((err, client, release) => {
   release();
 });
 
-// Initialize database tables
+// Initialize database tables - MAKE THIS FUNCTION ASYNC AND RETURN A PROMISE
 async function initDb() {
   try {
     // Create patients table
@@ -47,6 +45,7 @@ async function initDb() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    console.log('✅ patients table ready');
     
     // Create queue_history table
     await pool.query(`
@@ -63,6 +62,7 @@ async function initDb() {
         doctor_notes TEXT
       )
     `);
+    console.log('✅ queue_history table ready');
     
     // Create current_queue table
     await pool.query(`
@@ -79,6 +79,7 @@ async function initDb() {
         position INTEGER
       )
     `);
+    console.log('✅ current_queue table ready');
     
     // Create current_serving table
     await pool.query(`
@@ -90,19 +91,24 @@ async function initDb() {
         call_time TEXT
       )
     `);
+    console.log('✅ current_serving table ready');
     
-    console.log('✅ PostgreSQL tables initialized');
+    console.log('✅ All PostgreSQL tables initialized');
+    return true;
   } catch (err) {
     console.error('❌ Error initializing tables:', err);
+    throw err;
   }
 }
 
-initDb();
+// Create a promise that resolves when DB is ready
+const dbReady = initDb();
 
-// Helper functions
+// Helper functions - modified to wait for DB ready
 const dbHelpers = {
   // Find patient by phone
   findPatientByPhone: async (phoneDigits) => {
+    await dbReady; // Wait for tables to be ready
     try {
       const result = await pool.query(
         'SELECT * FROM patients WHERE phone_digits = $1',
@@ -117,6 +123,7 @@ const dbHelpers = {
 
   // Add new patient
   addPatient: async (patientData) => {
+    await dbReady; // Wait for tables to be ready
     try {
       const { phoneDigits, name, area, lastVisitDate } = patientData;
       const today = new Date().toISOString().split('T')[0];
@@ -136,6 +143,7 @@ const dbHelpers = {
 
   // Update patient last visit
   updatePatientVisit: async (patientId) => {
+    await dbReady; // Wait for tables to be ready
     try {
       const today = new Date().toISOString().split('T')[0];
       await pool.query(
@@ -152,6 +160,7 @@ const dbHelpers = {
 
   // Save current queue
   saveQueue: async (queue, currentServing, nextId) => {
+    await dbReady; // Wait for tables to be ready
     try {
       // Start a transaction
       await pool.query('BEGIN');
@@ -198,6 +207,7 @@ const dbHelpers = {
       
       // Commit transaction
       await pool.query('COMMIT');
+      return { success: true };
     } catch (err) {
       await pool.query('ROLLBACK');
       console.error('Error saving queue:', err);
@@ -207,6 +217,7 @@ const dbHelpers = {
 
   // Load queue from database
   loadQueue: async () => {
+    await dbReady; // Wait for tables to be ready
     try {
       const queueResult = await pool.query(
         'SELECT * FROM current_queue ORDER BY position'
@@ -250,6 +261,7 @@ const dbHelpers = {
 
   // Add to history
   addToHistory: async (patient, callTime, completeTime, waitingTime, doctorNotes = '') => {
+    await dbReady; // Wait for tables to be ready
     try {
       await pool.query(
         `INSERT INTO queue_history 
@@ -275,6 +287,7 @@ const dbHelpers = {
 
   // Get all patients with pagination
   getAllPatients: async (limit = 20, offset = 0, search = '') => {
+    await dbReady; // Wait for tables to be ready
     try {
       let query = 'SELECT * FROM patients';
       let countQuery = 'SELECT COUNT(*) as total FROM patients';
@@ -282,7 +295,7 @@ const dbHelpers = {
       let countParams = [];
       
       if (search) {
-        query += ' WHERE name ILIKE $1 OR phone_digits ILIKE $2 OR area ILIKE $3';
+        query += ' WHERE name ILIKE $1 OR phone_digits ILIKE $2 OR area ILIKE $3 ORDER BY id DESC LIMIT $4 OFFSET $5';
         countQuery += ' WHERE name ILIKE $1 OR phone_digits ILIKE $2 OR area ILIKE $3';
         const searchPattern = `%${search}%`;
         params = [searchPattern, searchPattern, searchPattern, limit, offset];
@@ -322,6 +335,7 @@ const dbHelpers = {
 
   // Get patient with history
   getPatientWithHistory: async (patientId) => {
+    await dbReady; // Wait for tables to be ready
     try {
       const patientResult = await pool.query(
         'SELECT * FROM patients WHERE id = $1',
@@ -349,4 +363,5 @@ const dbHelpers = {
   }
 };
 
-module.exports = { dbHelpers, pool };
+// Export helpers and a promise that resolves when DB is ready
+module.exports = { dbHelpers, pool, dbReady };
