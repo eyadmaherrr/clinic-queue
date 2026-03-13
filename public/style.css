@@ -2940,3 +2940,362 @@ h2 {
 .fab {
   font-family: "Font Awesome 7 Brands";
 }
+
+/* ==================== TRACK PAGE ==================== */
+.track-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.track-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.track-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: var(--accent);
+}
+
+.track-header p {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+}
+
+.phone-entry-form {
+  animation: fadeIn 0.5s ease;
+}
+
+.form-card {
+  background-color: var(--bg-card);
+  border-radius: 40px;
+  padding: 50px;
+  border: 2px solid var(--accent);
+  box-shadow: 0 20px 40px var(--blue-glow);
+  text-align: center;
+}
+
+.form-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  color: var(--gold);
+}
+
+.form-card h2 {
+  color: var(--accent);
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+}
+
+.form-description {
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+}
+
+/* Phone Input with Country Code */
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.country-code {
+  background-color: var(--accent);
+  color: white;
+  padding: 15px 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-right: 2px solid var(--gold);
+  white-space: nowrap;
+}
+
+.phone-input-container input {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  font-size: 1.2rem;
+  outline: none;
+  width: 100%;
+}
+
+.phone-input-container input:focus {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.btn-large {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2rem;
+  margin-top: 10px;
+}
+
+/* Track Error and Success Messages */
+.track-error {
+  background-color: #fee2e2;
+  color: var(--danger);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 20px;
+  text-align: center;
+  border: 1px solid var(--danger);
+  animation: shake 0.5s ease;
+}
+
+.track-success {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 20px;
+  text-align: center;
+  border: 1px solid #c3e6cb;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Back Button */
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 10px;
+  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.back-btn:hover {
+  color: var(--gold);
+  transform: translateX(-5px);
+}
+
+/* Track Notification */
+.track-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--success);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+/* Queue Status Card (for when patient is found) */
+.status-card {
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+  padding: 32px;
+  box-shadow: 0 20px 25px -5px var(--blue-glow);
+  animation: slideIn 0.5s ease;
+  border: 2px solid var(--gold);
+}
+
+.queue-number {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.queue-number .label {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.queue-number .number {
+  font-size: 5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  text-shadow: 2px 2px 0 var(--gold);
+}
+
+.position-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.info-item {
+  text-align: center;
+  padding: 16px;
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+}
+
+.info-item .label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.info-item .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background-color: white;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid var(--accent);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--blue-gradient);
+  transition: width 0.3s ease;
+}
+
+.current-serving {
+  text-align: center;
+  padding: 16px;
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+}
+
+.current-serving .label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.current-serving .value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.queue-length {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+}
+
+.auto-refresh-note {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  animation: pulse 2s infinite;
+}
+
+.patient-info-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 20px;
+  border: 1px solid var(--accent);
+}
+
+.patient-name, .patient-phone {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 60px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--bg-card);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.spinner-small {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 60px;
+  background-color: var(--bg-card);
+  border-radius: 40px;
+  border: 2px solid var(--danger);
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.error-state h2 {
+  color: var(--danger);
+  margin-bottom: 15px;
+}
+
+.error-state p {
+  color: var(--text-secondary);
+  margin: 5px 0;
+}
+
+/* Served Message */
+.served-message {
+  text-align: center;
+  padding: 40px;
+}
+
+.checkmark {
+  font-size: 5rem;
+  color: var(--success);
+  margin-bottom: 20px;
+  animation: scaleIn 0.5s ease;
+}
+
+/* Empty Queue */
+.empty-queue-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+  border: 2px dashed var(--accent);
+}
