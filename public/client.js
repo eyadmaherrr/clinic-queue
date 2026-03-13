@@ -19,27 +19,39 @@ const formatTime = (minutes) => {
     return `${hours}h ${remainingMins}m`;
 };
 
+// Replace the playNotification function with this:
 const playNotification = () => {
     try {
+        const audio = new Audio('/sounds/beep.mp3');
+        audio.volume = 0.5; // Set volume to 50%
+        audio.play().catch(e => {
+            console.log('Audio playback failed:', e);
+            // Fallback to Web Audio API if MP3 fails
+            fallbackBeep();
+        });
+    } catch (e) {
+        console.log('Audio not available:', e);
+        fallbackBeep();
+    }
+};
+
+// Fallback beep using Web Audio API (kept as backup)
+const fallbackBeep = () => {
+    try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
         if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
-        
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
         oscillator.frequency.value = 800;
         gainNode.gain.value = 0.1;
-        
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.1);
     } catch (e) {
-        console.log('Audio notification not available:', e);
+        console.log('Fallback audio also failed:', e);
     }
 };
 
@@ -769,7 +781,7 @@ function initScreenPage() {
     
     if (!nowServing) return;
     
-    const AVERAGE_CONSULTATION_TIME = 5;
+    const AVERAGE_CONSULTATION_TIME = 15;
     
     const updateDateTime = () => {
         if (datetime) {
