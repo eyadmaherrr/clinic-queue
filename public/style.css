@@ -3299,3 +3299,248 @@ h2 {
   border-radius: var(--border-radius);
   border: 2px dashed var(--accent);
 }
+
+/* ==================== QUEUE ITEM ACTION BUTTONS ==================== */
+.patient-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: var(--transition);
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* WhatsApp button - green */
+.whatsapp-btn {
+  color: #25D366;
+  background-color: rgba(37, 211, 102, 0.1);
+}
+
+.whatsapp-btn:hover {
+  background-color: #25D366;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Edit button - blue */
+.edit-btn {
+  color: var(--accent);
+  background-color: var(--blue-glow);
+}
+
+.edit-btn:hover {
+  background-color: var(--accent);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Priority button - gold */
+.priority-btn {
+  color: var(--gold);
+  background-color: rgba(255, 215, 0, 0.1);
+  opacity: 0.7;
+}
+
+.priority-btn.active {
+  opacity: 1;
+  background-color: rgba(255, 215, 0, 0.2);
+  transform: scale(1.1);
+}
+
+.priority-btn:hover {
+  background-color: var(--gold);
+  color: var(--accent);
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+/* Missed button - gray */
+.missed-btn {
+  color: #9ca3af;
+  background-color: rgba(156, 163, 175, 0.1);
+}
+
+.missed-btn:hover {
+  background-color: #9ca3af;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Restore button - green */
+.restore-btn {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.restore-btn:hover {
+  background-color: #10b981;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Remove button - red */
+.remove-btn {
+  color: var(--danger);
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+.remove-btn:hover {
+  background-color: var(--danger);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Move controls (up/down arrows) */
+.move-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.move-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: var(--transition);
+  font-size: 1rem;
+}
+
+.move-btn:hover:not(:disabled) {
+  color: var(--gold);
+  background-color: var(--bg-card);
+  transform: scale(1.1);
+}
+
+.move-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Patient status badges */
+.priority-badge {
+  background-color: var(--gold);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.missed-badge {
+  background-color: #9ca3af;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+/* ==================== DOCTOR SCREEN BUTTONS ==================== */
+.doctor-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.doctor-actions .btn {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.doctor-actions .btn i {
+  margin-right: 6px;
+}
+
+/* Next patient items in doctor screen */
+.next-patient-item-small {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid var(--accent);
+  box-shadow: 0 2px 8px var(--blue-glow);
+  transition: var(--transition);
+}
+
+.next-patient-item-small:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px var(--gold-glow);
+}
+
+.next-patient-item-small.priority {
+  border-left-color: var(--gold);
+  background: linear-gradient(135deg, #fff9e6, #fff2d0);
+}
+
+.next-position {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.next-name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.next-area {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.priority-star {
+  color: var(--gold);
+  font-size: 1.1rem;
+  margin-left: 8px;
+}
+
+/* Empty state for next patients */
+.empty-next {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary);
+  font-style: italic;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 2px dashed var(--accent);
+}
