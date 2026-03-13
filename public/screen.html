@@ -2,25 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waiting Room Screen - Clinic Queue System</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/fonts/fontawesome7/css/all.min.css">
 </head>
 <body class="tv-screen">
     <div class="screen-container">
-        <!-- Header with Indicators -->
+        <!-- Simple Header with Indicators -->
         <header class="screen-header">
             <h1>Dr Maher Mahmoud Clinics</h1>
             <div class="header-right">
                 <div class="indicator">
                     <span class="indicator-dot priority-dot"></span>
-                    <span class="indicator-text">Priority</span>
+                    <span>Priority</span>
                 </div>
                 <div class="indicator">
                     <span class="indicator-dot missed-dot"></span>
-                    <span class="indicator-text">Missed</span>
+                    <span>Missed</span>
                 </div>
                 <div class="datetime" id="datetime"></div>
             </div>
@@ -33,32 +32,16 @@
                 <div class="current-serving-card">
                     <div class="current-serving-label">CURRENT SERVING</div>
                     <div class="current-serving-number" id="nowServing">---</div>
+                    <!-- Add patient name here -->
                     <div class="current-serving-name" id="nowServingName"></div>
                 </div>
 
                 <!-- Right Side: Next Patients Grid -->
                 <div class="next-patients-container">
-                    <div class="next-patients-label">NEXT PATIENTS</div>
+                    <div class="next-patients-label">NEXT</div>
                     <div class="next-patients-grid" id="nextPatients">
                         <!-- Next patients will be dynamically added here -->
                     </div>
-                </div>
-            </div>
-                <div class="queue-info-item">
-                    <span class="info-label">Total</span>
-                    <span class="info-value" id="totalInQueue">0</span>
-                </div>
-                <div class="queue-info-item">
-                    <span class="info-label">Priority</span>
-                    <span class="info-value priority-count" id="priorityCount">0</span>
-                </div>
-                <div class="queue-info-item">
-                    <span class="info-label">Missed</span>
-                    <span class="info-value missed-count" id="missedCount">0</span>
-                </div>
-                <div class="queue-info-item">
-                    <span class="info-label">Wait</span>
-                    <span class="info-value" id="estimatedWait">0 min</span>
                 </div>
             </div>
         </main>

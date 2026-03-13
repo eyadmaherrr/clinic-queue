@@ -633,131 +633,133 @@ h2 {
 }
 
 /* ==================== TV SCREEN ==================== */
-/* ==================== TV SCREEN - NO SCROLL VERSION ==================== */
+/* ==================== TV SCREEN - CLEAN RECTANGLE HEADER (RESPONSIVE) ==================== */
 .tv-screen {
   background-color: var(--bg-primary);
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Inter', sans-serif;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 .screen-container {
   width: 100%;
-  height: 100vh;
-  max-width: 100%;
-  margin: 0;
+  max-width: 1800px;
+  margin: 0 auto;
   padding: 0;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
   overflow: hidden;
 }
 
-/* Header - fixed height */
+/* CLEAN RECTANGLE HEADER - Fully Responsive */
 .screen-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2vh 3vw;
+  margin: 0;
+  padding: clamp(12px, 2vh, 25px) clamp(15px, 3vw, 35px);
   background-color: var(--bg-card);
-  border-bottom: 2px solid var(--accent);
-  box-shadow: 0 5px 15px var(--blue-glow);
+  border-radius: 0;
+  border: 2px solid var(--accent);
+  border-left: none;
+  border-right: none;
+  width: 100%;
   flex-shrink: 0;
-  height: 10vh;
-  min-height: 50px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
+/* FULLY RESPONSIVE TITLE - Always readable */
 .screen-header h1 {
-  font-size: min(2.5vw, 4vh);
+  font-size: clamp(1rem, min(4vw, 4vh), 2.5rem);
   color: var(--accent);
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 40%;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 200px;
+  line-height: 1.2;
+  padding-right: 10px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1.5vw;
+  gap: clamp(8px, 1.5vw, 20px);
+  flex-wrap: wrap;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
 .indicator {
   display: flex;
   align-items: center;
-  gap: 0.5vw;
-  padding: 0.5vh 1vw;
+  gap: 5px;
+  padding: 5px clamp(8px, 1vw, 15px);
   background-color: var(--bg-primary);
   border-radius: 30px;
-  font-size: min(1.2vw, 2vh);
+  font-size: clamp(0.65rem, 1.2vw, 1rem);
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .indicator-dot {
-  width: min(1.2vw, 2vh);
-  height: min(1.2vw, 2vh);
+  width: clamp(8px, 1.2vw, 14px);
+  height: clamp(8px, 1.2vw, 14px);
   border-radius: 50%;
   display: inline-block;
 }
 
 .priority-dot {
   background: var(--gold);
-  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .missed-dot {
   background-color: #9ca3af;
-  box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
 }
 
 .datetime {
-  font-size: min(2vw, 3.5vh);
+  font-size: clamp(0.9rem, 2.2vw, 2rem);
   color: var(--gold);
   font-weight: 700;
   font-family: monospace;
   background-color: var(--accent);
-  padding: 0.5vh 1.5vw;
+  padding: clamp(4px, 1vh, 12px) clamp(10px, 2vw, 25px);
   border-radius: 50px;
   border: 2px solid var(--gold);
-  box-shadow: 0 5px 15px var(--gold-glow);
   white-space: nowrap;
 }
 
-/* Main content - takes remaining height */
+/* Rest of your styles remain exactly the same */
 .screen-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 2vh 2vw;
+  gap: min(30px, 3vh);
+  padding: min(30px, 3vh) min(30px, 3vw);
   overflow: hidden;
   min-height: 0;
 }
 
 .split-layout {
   display: flex;
-  gap: 2vw;
+  gap: min(30px, 2vw);
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Left side - Current Serving */
 .current-serving-card {
   flex: 1.2;
   background: var(--bg-card);
-  border-radius: 3vh;
-  padding: 2vh 2vw;
+  border-radius: min(80px, 5vw);
+  padding: clamp(20px, 4vh, 50px) clamp(15px, 3vw, 40px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -775,68 +777,70 @@ h2 {
   top: 0;
   left: 0;
   right: 0;
-  height: 0.5vh;
+  height: clamp(4px, 0.6vh, 8px);
   background: var(--gold-gradient);
 }
 
 .current-serving-label {
   color: var(--accent);
-  font-size: min(3vw, 5vh);
+  font-size: clamp(1.2rem, 4vw, 3rem);
   font-weight: 700;
-  letter-spacing: 0.3vw;
-  margin-bottom: 2vh;
+  letter-spacing: 2px;
+  margin-bottom: clamp(15px, 3vh, 30px);
   text-transform: uppercase;
+  text-align: center;
   white-space: nowrap;
 }
 
 .current-serving-number {
-  font-size: min(20vw, 25vh);
+  font-size: clamp(4rem, 25vw, 22rem);
   font-weight: 800;
   color: var(--accent);
   line-height: 1;
-  text-shadow: 0.3vw 0.3vh 0 var(--gold);
+  text-shadow: 3px 3px 0 var(--gold);
   font-family: 'Inter', sans-serif;
   animation: pulse 3s infinite;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .current-serving-name {
-  font-size: min(4vw, 6vh);
+  font-size: clamp(1.2rem, 5vw, 4rem);
   font-weight: 800;
   color: var(--accent);
   line-height: 1.2;
-  text-shadow: 0.2vw 0.2vh 0 var(--gold);
+  text-shadow: 2px 2px 0 var(--gold);
   font-family: 'Inter', sans-serif;
-  margin-top: 2vh;
-  letter-spacing: 0.2vw;
+  margin-top: clamp(10px, 2vh, 25px);
+  letter-spacing: 1px;
   text-transform: uppercase;
   text-align: center;
-  max-width: 90%;
+  max-width: 95%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
-  padding-top: 1vh;
 }
 
 .current-serving-name::before {
   content: '';
   position: absolute;
-  top: -0.5vh;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 30%;
-  height: 0.3vh;
+  width: min(100px, 20%);
+  height: 3px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
   border-radius: 3px;
 }
 
-/* Right side - Next Patients */
 .next-patients-container {
   flex: 0.8;
   background-color: var(--bg-card);
-  border-radius: 3vh;
-  padding: 2vh 1.5vw;
+  border-radius: min(80px, 5vw);
+  padding: clamp(20px, 3vh, 45px) clamp(15px, 3vw, 35px);
   display: flex;
   flex-direction: column;
   border: 3px solid var(--gold);
@@ -847,13 +851,13 @@ h2 {
 
 .next-patients-label {
   color: var(--accent);
-  font-size: min(3vw, 5vh);
+  font-size: clamp(1.2rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  letter-spacing: 0.3vw;
-  margin-bottom: 2vh;
+  letter-spacing: 2px;
+  margin-bottom: clamp(15px, 3vh, 35px);
   text-transform: uppercase;
   border-bottom: 3px solid var(--gold);
-  padding-bottom: 1vh;
+  padding-bottom: clamp(8px, 1.5vh, 15px);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -861,16 +865,15 @@ h2 {
 .next-patients-grid {
   display: flex;
   flex-direction: column;
-  gap: 1vh;
+  gap: clamp(10px, 1.5vh, 20px);
   flex: 1;
   overflow-y: auto;
-  padding-right: 0.5vw;
+  padding-right: 5px;
   min-height: 0;
 }
 
-/* Hide scrollbar but keep functionality */
 .next-patients-grid::-webkit-scrollbar {
-  width: 4px;
+  width: clamp(4px, 0.6vw, 8px);
 }
 
 .next-patients-grid::-webkit-scrollbar-track {
@@ -885,30 +888,32 @@ h2 {
 
 .next-patient-item {
   background-color: white;
-  border-radius: 2vh;
-  padding: 1.2vh 1.5vw;
+  border-radius: min(40px, 4vw);
+  padding: clamp(12px, 2vh, 25px) clamp(15px, 2.5vw, 30px);
   display: flex;
   align-items: center;
-  gap: 1vw;
+  gap: clamp(10px, 2vw, 25px);
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  animation: slideInRight 0.5s ease;
   box-shadow: 0 5px 15px var(--blue-glow);
   position: relative;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .next-patient-item:hover {
   border-color: var(--gold);
-  transform: translateX(0.5vw);
+  transform: translateX(5px);
   background-color: #fff;
   box-shadow: 0 10px 25px var(--gold-glow);
 }
 
 .next-patient-number {
-  font-size: min(3vw, 4vh);
+  font-size: clamp(1.2rem, 4vw, 3rem);
   font-weight: 800;
   color: var(--accent);
-  min-width: 5vw;
+  min-width: clamp(50px, 8vw, 120px);
   font-family: monospace;
   background: var(--gold-gradient);
   -webkit-background-clip: text;
@@ -918,7 +923,7 @@ h2 {
 }
 
 .next-patient-name {
-  font-size: min(2vw, 3vh);
+  font-size: clamp(0.9rem, 2.5vw, 2rem);
   font-weight: 600;
   color: var(--text-primary);
   flex: 1;
@@ -927,38 +932,36 @@ h2 {
   text-overflow: ellipsis;
 }
 
-/* Priority Patient Card with Star */
+/* Priority Patient */
 .next-patient-item.priority {
   background: linear-gradient(135deg, #fff9e6, #fff2d0);
-  border-left: 0.5vw solid var(--gold);
+  border-left: 5px solid var(--gold);
   position: relative;
 }
 
 .next-patient-item.priority::after {
   content: "⭐";
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 1vw;
-  font-size: min(2vw, 3vh);
+  top: 5px;
+  right: clamp(5px, 1.5vw, 15px);
+  font-size: clamp(0.7rem, 2vw, 1.5rem);
   opacity: 0.5;
 }
 
-/* Missed Patient Card with Clock */
+/* Missed Patient */
 .next-patient-item.missed {
   background-color: #f5f5f5;
   opacity: 0.8;
-  border-left: 0.5vw solid #9ca3af;
+  border-left: 5px solid #9ca3af;
   position: relative;
 }
 
 .next-patient-item.missed::after {
   content: "⏰";
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 1vw;
-  font-size: min(2vw, 3vh);
+  top: 5px;
+  right: clamp(5px, 1.5vw, 15px);
+  font-size: clamp(0.7rem, 2vw, 1.5rem);
   opacity: 0.5;
 }
 
@@ -976,242 +979,276 @@ h2 {
   -webkit-text-fill-color: var(--text-secondary);
 }
 
-/* Make the top patient slightly more prominent */
 .next-patient-item:first-child .next-patient-number {
   color: var(--success);
   font-weight: 900;
+  background: none;
+  -webkit-text-fill-color: var(--success);
 }
 
-/* Responsive adjustments for specific breakpoints */
-@media (max-aspect-ratio: 1/1) {
-  /* Portrait mode - stack vertically */
+.queue-info-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(8px, 1.5vw, 20px);
+  background-color: var(--accent);
+  border-radius: min(60px, 5vw);
+  padding: clamp(12px, 2vh, 25px) clamp(15px, 2vw, 30px);
+  margin-top: min(20px, 2vh);
+  border: 3px solid var(--gold);
+  box-shadow: 0 10px 25px var(--gold-glow);
+  flex-shrink: 0;
+}
+
+.queue-info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  min-width: 0;
+}
+
+.queue-info-item .info-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(0.6rem, 1.2vw, 1rem);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.queue-info-item .info-value {
+  color: white;
+  font-size: clamp(1rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.priority-count {
+  color: var(--gold) !important;
+}
+
+.missed-count {
+  color: #e0e0e0 !important;
+}
+
+/* ==================== RESPONSIVE BREAKPOINTS ==================== */
+
+/* Large Desktops (1400px+) */
+@media (min-width: 1400px) {
+  .current-serving-number {
+    font-size: min(18rem, 20vw);
+  }
+}
+
+/* Small Desktops / Tablets Landscape (992px - 1199px) */
+@media (max-width: 1199px) {
   .split-layout {
     flex-direction: column;
+    gap: 20px;
   }
   
   .current-serving-number {
-    font-size: min(25vw, 20vh);
+    font-size: 12rem;
   }
   
-  .next-patient-number {
-    font-size: min(5vw, 4vh);
-    min-width: 10vw;
-  }
-  
-  .next-patient-name {
-    font-size: min(4vw, 3vh);
+  .next-patients-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
   }
   
   .next-patient-item {
-    padding: 1vh 2vw;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .next-patient-number {
+    min-width: auto;
+    background: none;
+    -webkit-text-fill-color: var(--accent);
   }
 }
 
-@media (max-width: 768px) {
-  /* Mobile devices */
+/* Tablets Portrait (768px - 991px) */
+@media (max-width: 991px) {
   .screen-header {
-    padding: 1vh 2vw;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
   }
   
   .screen-header h1 {
-    font-size: min(4vw, 3vh);
+    max-width: 100%;
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+  }
+  
+  .header-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .current-serving-number {
+    font-size: 10rem;
+  }
+  
+  .next-patients-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .queue-info-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Large Phones (576px - 767px) */
+@media (max-width: 767px) {
+  .screen-header {
+    padding: 12px 15px;
+  }
+  
+  .screen-header h1 {
+    font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+  }
+  
+  .header-right {
+    gap: 10px;
   }
   
   .indicator {
-    padding: 0.3vh 1.5vw;
-    font-size: min(2.5vw, 2vh);
+    padding: 4px 10px;
+  }
+  
+  .current-serving-number {
+    font-size: 7rem;
+  }
+  
+  .next-patients-grid {
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+  }
+  
+  .next-patient-number {
+    font-size: 1.5rem;
+    min-width: 70px;
+  }
+  
+  .queue-info-item .info-value {
+    font-size: 1.3rem;
+  }
+}
+
+/* Small Phones (375px - 575px) */
+@media (max-width: 575px) {
+  .screen-header {
+    padding: 10px;
+  }
+  
+  .screen-header h1 {
+    font-size: clamp(1rem, 4vw, 1.4rem);
+  }
+  
+  .indicator {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+  
+  .indicator-dot {
+    width: 6px;
+    height: 6px;
   }
   
   .datetime {
-    font-size: min(3vw, 2.5vh);
-    padding: 0.3vh 2vw;
+    padding: 4px 12px;
+    font-size: clamp(0.8rem, 3.5vw, 1.2rem);
   }
   
   .current-serving-number {
-    font-size: min(25vw, 15vh);
+    font-size: 5rem;
   }
   
   .current-serving-name {
-    font-size: min(5vw, 4vh);
+    font-size: 1.5rem;
   }
   
-  .next-patient-number {
-    font-size: min(4vw, 3vh);
-    min-width: 12vw;
-  }
-  
-  .next-patient-name {
-    font-size: min(3.5vw, 2.5vh);
-  }
-}
-
-/* Landscape mode for phones */
-@media (max-height: 500px) and (orientation: landscape) {
-  .screen-header {
-    height: 15vh;
-    padding: 1vh 2vw;
-  }
-  
-  .current-serving-number {
-    font-size: min(20vh, 15vw);
+  .next-patients-grid {
+    max-height: 250px;
   }
   
   .next-patient-item {
-    padding: 0.5vh 1vw;
+    padding: 8px 12px;
   }
   
   .next-patient-number {
-    font-size: min(3vh, 2.5vw);
+    font-size: 1.2rem;
+    min-width: 50px;
   }
   
   .next-patient-name {
-    font-size: min(2.5vh, 2vw);
+    font-size: 1rem;
+  }
+  
+  .queue-info-item .info-value {
+    font-size: 1.1rem;
   }
 }
 
-/* ==================== TRACK PAGE ==================== */
-.track-container {
-  max-width: 700px;
-  margin: 40px auto;
+/* Extra Small Phones (below 375px) */
+@media (max-width: 374px) {
+  .screen-header h1 {
+    font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+  }
+  
+  .current-serving-number {
+    font-size: 4rem;
+  }
+  
+  .current-serving-name {
+    font-size: 1.2rem;
+  }
+  
+  .next-patient-number {
+    font-size: 1rem;
+    min-width: 40px;
+  }
+  
+  .queue-info-item .info-value {
+    font-size: 1rem;
+  }
 }
 
-.track-header {
-  text-align: center;
-  margin-bottom: 30px;
+/* Landscape Mode */
+@media (max-height: 600px) and (orientation: landscape) {
+  .screen-header h1 {
+    font-size: clamp(1rem, 3vh, 1.8rem);
+  }
+  
+  .current-serving-number {
+    font-size: 5rem;
+  }
+  
+  .next-patients-grid {
+    max-height: 150px;
+  }
 }
 
-.track-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+/* Animations */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
 }
 
-.track-header p {
-  color: var(--text-secondary);
-  font-size: 1.2rem;
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
-
-.phone-entry-form {
-  animation: fadeIn 0.5s ease;
-}
-
-.form-card {
-  background-color: var(--bg-card);
-  border-radius: 40px;
-  padding: 50px;
-  border: 2px solid var(--accent);
-  box-shadow: 0 20px 40px var(--blue-glow);
-  text-align: center;
-}
-
-.form-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-}
-
-.form-card h2 {
-  color: var(--accent);
-  margin-bottom: 15px;
-}
-
-.form-description {
-  color: var(--text-secondary);
-  margin-bottom: 30px;
-}
-
-.phone-input-container {
-  display: flex;
-  align-items: center;
-  background-color: white;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.country-code {
-  background-color: var(--accent);
-  color: white;
-  padding: 15px 20px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  border-right: 2px solid var(--gold);
-}
-
-.phone-input-container input {
-  flex: 1;
-  padding: 15px;
-  border: none;
-  font-size: 1.2rem;
-  outline: none;
-}
-
-.phone-input-container input:focus {
-  box-shadow: inset 0 0 0 2px var(--gold);
-}
-
-.btn-large {
-  width: 100%;
-  padding: 15px;
-  font-size: 1.2rem;
-}
-
-.track-error {
-  background-color: #fee2e2;
-  color: var(--danger);
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 20px;
-  text-align: center;
-  border: 1px solid var(--danger);
-  animation: shake 0.5s ease;
-}
-
-.track-success {
-  background-color: #d4edda;
-  color: #155724;
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 20px;
-  text-align: center;
-  border: 1px solid #c3e6cb;
-  animation: fadeIn 0.3s ease;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 10px;
-  margin-bottom: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: var(--transition);
-}
-
-.back-btn:hover {
-  color: var(--gold);
-  transform: translateX(-5px);
-}
-
-.track-notification {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--success);
-  color: white;
-  padding: 15px 30px;
-  border-radius: 50px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  z-index: 1000;
-  animation: slideDown 0.3s ease;
-}
-
 /* ==================== QUEUE STATUS CARD (Shared) ==================== */
 .status-card {
   background-color: var(--bg-card);
