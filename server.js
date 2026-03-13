@@ -4,7 +4,7 @@ const socketIo = require("socket.io");
 const path = require("path");
 const session = require("express-session");
 const fetch = require("node-fetch");
-const { db, dbHelpers } = require('./db');
+const { dbHelpers, pool } = require('./db-pg');
 
 const app = express();
 const server = http.createServer(app);
