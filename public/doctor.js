@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNextPatients(data.queue);
         if (data.currentServing) {
             showCurrentPatient(data.currentServing);
-            fetchPatientHistory(data.currentServing.phoneDigits);
+            // Pass the full patient data to fetch history
+            fetchPatientHistory(data.currentServing);
         } else {
             hideCurrentPatient();
         }
@@ -45,6 +46,21 @@ function showCurrentPatient(patient) {
     // Clear complaint input
     const complaintInput = document.getElementById('complaintInput');
     if (complaintInput) complaintInput.value = '';
+    
+    // Set last visit date from patient data if available
+    const lastVisitEl = document.getElementById('currentLastVisit');
+    const typeEl = document.getElementById('currentType');
+    
+    if (lastVisitEl) {
+        // Check if patient has lastVisitDate from the queue data
+        if (patient.lastVisitDate) {
+            lastVisitEl.textContent = formatDate(patient.lastVisitDate);
+            if (typeEl) typeEl.textContent = 'Returning Patient';
+        } else {
+            // If not in queue data, we'll fetch it
+            lastVisitEl.textContent = 'Loading...';
+        }
+    }
 }
 
 function hideCurrentPatient() {
@@ -56,9 +72,32 @@ function hideCurrentPatient() {
     currentPatient = null;
 }
 
-function fetchPatientHistory(phone) {
+function fetchPatientHistory(patient) {
+    // If patient already has lastVisitDate in the queue data, use it
+    if (patient.lastVisitDate) {
+        const lastVisitEl = document.getElementById('currentLastVisit');
+        const typeEl = document.getElementById('currentType');
+        
+        if (lastVisitEl) {
+            lastVisitEl.textContent = formatDate(patient.lastVisitDate);
+        }
+        if (typeEl) {
+            typeEl.textContent = patient.lastVisitDate ? 'Returning Patient' : 'New Patient';
+        }
+        return;
+    }
+    
     // Format phone number for API
-    const formattedPhone = phone.replace(/\D/g, '');
+    const formattedPhone = patient.phoneDigits?.replace(/\D/g, '') || '';
+    
+    if (!formattedPhone) {
+        // No phone number, can't fetch
+        const lastVisitEl = document.getElementById('currentLastVisit');
+        const typeEl = document.getElementById('currentType');
+        if (lastVisitEl) lastVisitEl.textContent = 'Unknown';
+        if (typeEl) typeEl.textContent = 'Patient';
+        return;
+    }
     
     fetch(`/api/check-patient/${formattedPhone}`)
         .then(response => {
@@ -117,7 +156,6 @@ function updateQueueInfo(data) {
 }
 
 function loadTodayStats() {
-    // Fetch today's stats from server
     fetch('/api/today-stats')
         .then(response => response.json())
         .then(data => {
@@ -132,7 +170,6 @@ function loadTodayStats() {
 }
 
 function loadTodayHistory() {
-    // Fetch today's completed patients
     fetch('/api/today-history')
         .then(response => response.json())
         .then(data => {
@@ -146,117 +183,10 @@ function loadTodayHistory() {
         });
 }
 
-function completePatient() {
-    const complaint = document.getElementById('complaintInput')?.value || '';
-    
-    if (!currentPatient) {
-        showNotification('No patient to complete', 'error');
-        return;
-    }
-    
-    // Save to server
-    fetch('/api/complete-patient', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            patientId: currentPatient.id,
-            patientData: currentPatient,
-            complaint: complaint,
-            completedTime: new Date().toISOString()
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Add to local history
-            completedPatients.unshift({
-                ...currentPatient,
-                complaint: complaint,
-                completedTime: new Date().toLocaleTimeString()
-            });
-            
-            updateTodayHistory();
-            
-            // Call next patient
-            socket.emit('call-next');
-            showNotification('Patient completed', 'success');
-        } else {
-            showNotification('Error completing patient', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error completing patient:', error);
-        showNotification('Error completing patient', 'error');
-    });
-}
-
-function saveNotes() {
-    if (!currentPatient) {
-        showNotification('No patient selected', 'error');
-        return;
-    }
-    
-    const notes = document.getElementById('complaintInput')?.value || '';
-    
-    fetch('/api/save-notes', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            patientId: currentPatient.id,
-            notes: notes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Notes saved', 'success');
-        } else {
-            showNotification('Error saving notes', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error saving notes:', error);
-        showNotification('Error saving notes', 'error');
-    });
-}
-
-function referPatient() {
-    if (!currentPatient) {
-        showNotification('No patient to refer', 'error');
-        return;
-    }
-    
-    if (confirm('Refer this patient to another department?')) {
-        fetch('/api/refer-patient', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                patientId: currentPatient.id,
-                patientData: currentPatient
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Patient referred', 'success');
-                // Call next patient
-                socket.emit('call-next');
-            } else {
-                showNotification('Error referring patient', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error referring patient:', error);
-            showNotification('Error referring patient', 'error');
-        });
-    }
-}
+// You can remove these if you don't have the buttons
+// function completePatient() { ... }
+// function saveNotes() { ... }
+// function referPatient() { ... }
 
 function updateTodayHistory() {
     const tbody = document.getElementById('todayHistory');
@@ -273,13 +203,13 @@ function updateTodayHistory() {
     
     tbody.innerHTML = completedPatients.map(p => `
         <tr>
-            <td>${p.completedTime || formatTime(new Date())}</td>
+            <td>${p.completedTime ? formatTime(new Date(p.completedTime)) : formatTime(new Date())}</td>
             <td>${escapeHtml(p.name)}</td>
             <td>${escapeHtml(p.area || 'Unknown')}</td>
-            <td>${p.isPriority ? 'Priority' : 'Regular'}</td>
+            <td>${p.is_priority ? 'Priority' : 'Regular'}</td>
             <td>${escapeHtml(p.complaint || '-')}</td>
             <td>
-                <button class="action-btn" onclick="viewPatientDetails(${p.id})">
+                <button class="action-btn view-btn" onclick="viewPatientDetails(${p.patient_id})" title="View patient details">
                     <i class="fas fa-eye"></i>
                 </button>
             </td>
@@ -288,20 +218,40 @@ function updateTodayHistory() {
 }
 
 function viewPatientDetails(patientId) {
-    // Redirect to patients page or open modal
     window.location.href = `/patients?id=${patientId}`;
 }
 
-function showNotification(message, type) {
-    // Use your existing notification function
+// Local notification function
+function showNotification(message, type = 'success') {
     if (typeof window.showNotification === 'function') {
         window.showNotification(message, type);
     } else {
-        alert(message);
+        // Fallback notification
+        const notification = document.createElement('div');
+        notification.className = `doctor-notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: ${type === 'success' ? 'var(--gold)' : 'var(--danger)'};
+            color: ${type === 'success' ? 'var(--accent)' : 'white'};
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -309,9 +259,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Helper function to format date
 function formatDate(dateString) {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return 'First visit';
     try {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-EG', {
@@ -324,7 +273,6 @@ function formatDate(dateString) {
     }
 }
 
-// Helper function to format time
 function formatTime(date) {
     if (!date) return '-';
     try {
