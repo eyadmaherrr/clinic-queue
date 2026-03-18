@@ -121,25 +121,25 @@ const dbHelpers = {
     }
   },
 
-  // Add new patient
-  addPatient: async (patientData) => {
-    await dbReady; // Wait for tables to be ready
+// Add new patient - MODIFIED
+addPatient: async (patientData) => {
     try {
-      const { phoneDigits, name, area, lastVisitDate } = patientData;
-      const today = new Date().toISOString().split('T')[0];
-      
-      const result = await pool.query(
-        `INSERT INTO patients (phone_digits, name, area, first_visit_date, last_visit_date, total_visits)
-         VALUES ($1, $2, $3, $4, $5, 1) RETURNING id`,
-        [phoneDigits, name, area, today, lastVisitDate || today]
-      );
-      
-      return { id: result.rows[0].id };
+        const { phoneDigits, name, area, lastVisitDate } = patientData;
+        const today = new Date().toISOString().split('T')[0];
+        
+        // For new patients, first_visit_date is today, but last_visit_date should be NULL
+        const result = await pool.query(
+            `INSERT INTO patients (phone_digits, name, area, first_visit_date, last_visit_date, total_visits)
+             VALUES ($1, $2, $3, $4, $5, 1) RETURNING id`,
+            [phoneDigits, name, area, today, lastVisitDate] // lastVisitDate will be null for new patients
+        );
+        
+        return { id: result.rows[0].id };
     } catch (err) {
-      console.error('Error adding patient:', err);
-      throw err;
+        console.error('Error adding patient:', err);
+        throw err;
     }
-  },
+},
 
   // Update patient last visit
   updatePatientVisit: async (patientId) => {

@@ -243,7 +243,7 @@ app.get("/view/:token", (req, res) => {
 
 // ==================== API ROUTES ====================
 
-// Check patient history by phone number - UPDATED FOR POSTGRESQL
+// Check patient history by phone number - FIXED
 app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
     try {
         let phone = req.params.phone;
@@ -265,7 +265,7 @@ app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
                 patientId: patient.id,
                 name: patient.name,
                 area: patient.area,
-                lastVisitDate: patient.last_visit_date,
+                lastVisitDate: patient.last_visit_date, // This will be null for new patients
                 totalVisits: patient.total_visits
             });
         } else {
@@ -401,7 +401,7 @@ app.get('/api/patients/:id', requireAuth, async (req, res) => {
     }
 });
 
-// Add patient - UPDATED FOR POSTGRESQL
+// Add patient - FIXED for new patients
 app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
     try {
         console.log('Add patient request received:', req.body);
@@ -452,31 +452,37 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
             isPriority: isPriority,
             isMissed: false,
             area: area.trim() || 'Unknown',
-            lastVisitDate: lastVisitDate
+            lastVisitDate: null, // Always start with null for new patients
+            isNewPatient: true
         };
 
         // Save to database
         try {
-            // Check if patient exists
+            // Check if patient exists in database
             const existing = await dbHelpers.findPatientByPhone(phoneDigits);
             
             if (existing) {
-                // Update existing patient
-                await dbHelpers.updatePatientVisit(existing.id);
+                // This is a RETURNING patient
                 newPatient.patientId = existing.id;
                 newPatient.isNewPatient = false;
-                newPatient.lastVisitDate = existing.last_visit_date;
-                console.log(`✅ Updated patient #${existing.id} with new visit`);
+                newPatient.lastVisitDate = existing.last_visit_date; // Use their PREVIOUS last visit date
+                
+                // Update their record for NEXT time
+                await dbHelpers.updatePatientVisit(existing.id);
+                
+                console.log(`✅ Returning patient #${existing.id} - last visit was ${existing.last_visit_date}`);
             } else {
-                // Add new patient
+                // This is a NEW patient
                 const result = await dbHelpers.addPatient({
                     phoneDigits,
                     name: name.trim(),
                     area: area.trim() || 'Unknown',
-                    lastVisitDate: lastVisitDate || new Date().toISOString().split('T')[0]
+                    lastVisitDate: null // Don't set last visit date for new patients
                 });
                 newPatient.patientId = result.id;
                 newPatient.isNewPatient = true;
+                newPatient.lastVisitDate = null;
+                
                 console.log(`✅ Added new patient to database with ID: ${result.id}`);
             }
         } catch (dbError) {
@@ -486,7 +492,6 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
 
         // Add to queue
         if (isPriority) {
-            // Add after existing priority patients
             const priorityCount = queue.filter(p => p.isPriority && !p.isMissed).length;
             queue.splice(priorityCount, 0, newPatient);
         } else {
@@ -500,6 +505,9 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
 
         // Generate WhatsApp link
         const trackLink = `${BASE_URL}/track`;
+        const patientType = newPatient.isNewPatient ? '🆕 New Patient' : '🔄 Returning Patient';
+        const visitDisplay = newPatient.lastVisitDate ? `Last visit: ${newPatient.lastVisitDate}` : 'First visit';
+        
         const whatsappMessage = encodeURIComponent(
             `🏥 *Dr Maher Mahmoud Clinics*\n\n` +
             `Hello *${name.trim()}*, you have been added to the queue.\n\n` +
@@ -507,7 +515,9 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
             `*Priority:* ${isPriority ? '⭐ Priority' : '🟢 Normal'}\n` +
             `*Current Position:* ${newPatient.position}\n` +
             `*Estimated Wait:* ${calculateWaitingTime(newPatient.position - 1)} minutes\n\n` +
-            `*Area:* ${area.trim() || 'Unknown'}\n\n` +
+            `*Area:* ${area.trim() || 'Unknown'}\n` +
+            `*Status:* ${patientType}\n` +
+            `*${visitDisplay}*\n\n` +
             `👉 *Track your position:*\n` +
             `${trackLink}\n\n` +
             `Thank you for choosing our clinic!`

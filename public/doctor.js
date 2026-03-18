@@ -24,6 +24,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Helper function to calculate age from birth date
+function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    // Adjust age if birthday hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+// Helper function to format age string
+function formatAge(age) {
+    if (age === null || age === undefined) return '-';
+    if (age === 0) return '< 1 year';
+    if (age === 1) return '1 year';
+    return `${age} years`;
+}
+
 function showCurrentPatient(patient) {
     currentPatient = patient;
     document.getElementById('noPatientMessage').classList.add('hidden');
@@ -34,6 +59,25 @@ function showCurrentPatient(patient) {
     document.getElementById('currentPhone').textContent = patient.phoneNumber;
     document.getElementById('currentArea').textContent = patient.area || 'Unknown';
     
+    // Handle birth date and age
+    const birthDateEl = document.getElementById('currentBirthDate');
+    const ageEl = document.getElementById('currentAge');
+    
+    if (birthDateEl && ageEl) {
+        if (patient.birthDate) {
+            // Format birth date for display
+            const formattedBirthDate = formatDate(patient.birthDate);
+            birthDateEl.textContent = formattedBirthDate;
+            
+            // Calculate and display age
+            const age = calculateAge(patient.birthDate);
+            ageEl.textContent = formatAge(age);
+        } else {
+            birthDateEl.textContent = 'Not specified';
+            ageEl.textContent = '-';
+        }
+    }
+    
     const statusEl = document.getElementById('currentStatus');
     if (patient.isPriority) {
         statusEl.textContent = '⭐ Priority';
@@ -41,25 +85,6 @@ function showCurrentPatient(patient) {
     } else {
         statusEl.textContent = 'Regular';
         statusEl.className = 'patient-status';
-    }
-    
-    // Clear complaint input
-    const complaintInput = document.getElementById('complaintInput');
-    if (complaintInput) complaintInput.value = '';
-    
-    // Set last visit date from patient data if available
-    const lastVisitEl = document.getElementById('currentLastVisit');
-    const typeEl = document.getElementById('currentType');
-    
-    if (lastVisitEl) {
-        // Check if patient has lastVisitDate from the queue data
-        if (patient.lastVisitDate) {
-            lastVisitEl.textContent = formatDate(patient.lastVisitDate);
-            if (typeEl) typeEl.textContent = 'Returning Patient';
-        } else {
-            // If not in queue data, we'll fetch it
-            lastVisitEl.textContent = 'Loading...';
-        }
     }
 }
 
@@ -183,11 +208,6 @@ function loadTodayHistory() {
         });
 }
 
-// You can remove these if you don't have the buttons
-// function completePatient() { ... }
-// function saveNotes() { ... }
-// function referPatient() { ... }
-
 function updateTodayHistory() {
     const tbody = document.getElementById('todayHistory');
     if (!tbody) return;
@@ -260,7 +280,7 @@ function escapeHtml(text) {
 }
 
 function formatDate(dateString) {
-    if (!dateString) return 'First visit';
+    if (!dateString) return 'Not specified';
     try {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-EG', {

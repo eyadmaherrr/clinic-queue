@@ -9,7 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-  <link rel="stylesheet" href="./fonts/fontawesome7/css/all.min.css">
+    <link rel="stylesheet" href="./fonts/fontawesome7/css/all.min.css">
   </head>
   <body>
     <div class="container">
@@ -56,7 +56,6 @@
               >
             </div>
           </div>
-          <!-- Logout button is now in the navigation, so you can remove this one -->
         </div>
 
         <!-- Add Patient Form -->
@@ -84,7 +83,7 @@
               </div>
             </div>
             
-            <!-- Area and Date Row -->
+            <!-- Area, Birth Date, and Last Visit Row -->
             <div class="form-row">
               <div class="form-group">
                 <label for="patientArea"
@@ -99,6 +98,13 @@
                 />
               </div>
               <div class="form-group">
+                <label for="birthDate"
+                  ><i class="fas fa-birthday-cake"></i> Birth Date</label
+                >
+                <input type="date" id="birthDate" name="birthDate" />
+                <small class="form-hint" id="birthHint">Will auto-fill for returning patients</small>
+              </div>
+              <div class="form-group">
                 <label for="lastVisitDate"
                   ><i class="fas fa-calendar"></i> Last Visit</label
                 >
@@ -107,21 +113,21 @@
               </div>
             </div>
 
-            <!-- New Patient Checkbox -->
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="isNewPatient" checked disabled />
-                <i class="fas fa-user-plus"></i> <span id="patientStatusText">New Patient</span>
-              </label>
-            </div>
-
-            <!-- Priority Checkbox -->
-            <div class="form-group priority-checkbox">
-              <label>
-                <input type="checkbox" id="priorityCheckbox" />
-                <i class="fas fa-star" style="color: var(--gold)"></i> Mark as
-                Priority Patient
-              </label>
+            <!-- Patient Status Row -->
+            <div class="form-row">
+              <div class="checkbox-group">
+                <label>
+                  <input type="checkbox" id="isNewPatient" checked disabled />
+                  <i class="fas fa-user-plus"></i> <span id="patientStatusText">New Patient</span>
+                </label>
+              </div>
+              <div class="form-group priority-checkbox">
+                <label>
+                  <input type="checkbox" id="priorityCheckbox" />
+                  <i class="fas fa-star" style="color: var(--gold)"></i> Mark as
+                  Priority Patient
+                </label>
+              </div>
             </div>
 
             <button type="submit" class="btn btn-success" id="addPatientBtn">
