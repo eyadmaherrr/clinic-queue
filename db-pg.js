@@ -39,6 +39,7 @@ async function initDb() {
         phone_digits TEXT UNIQUE,
         name TEXT NOT NULL,
         area TEXT,
+        birth_date TEXT,  // 👈 ADD THIS LINE
         first_visit_date TEXT,
         last_visit_date TEXT,
         total_visits INTEGER DEFAULT 1,
@@ -107,31 +108,34 @@ const dbReady = initDb();
 // Helper functions - modified to wait for DB ready
 const dbHelpers = {
   // Find patient by phone
-  findPatientByPhone: async (phoneDigits) => {
+// Find patient by phone
+findPatientByPhone: async (phoneDigits) => {
     await dbReady; // Wait for tables to be ready
     try {
       const result = await pool.query(
         'SELECT * FROM patients WHERE phone_digits = $1',
         [phoneDigits]
       );
-      return result.rows[0];
+      return result.rows[0]; // This will now include birth_date
     } catch (err) {
       console.error('Error finding patient:', err);
       return null;
     }
-  },
+},
 
 // Add new patient - MODIFIED
+// Add new patient - WITH BIRTH DATE
 addPatient: async (patientData) => {
+    await dbReady; // Wait for tables to be ready
     try {
-        const { phoneDigits, name, area, lastVisitDate } = patientData;
+        const { phoneDigits, name, area, birthDate, lastVisitDate } = patientData;
         const today = new Date().toISOString().split('T')[0];
         
         // For new patients, first_visit_date is today, but last_visit_date should be NULL
         const result = await pool.query(
-            `INSERT INTO patients (phone_digits, name, area, first_visit_date, last_visit_date, total_visits)
-             VALUES ($1, $2, $3, $4, $5, 1) RETURNING id`,
-            [phoneDigits, name, area, today, lastVisitDate] // lastVisitDate will be null for new patients
+            `INSERT INTO patients (phone_digits, name, area, birth_date, first_visit_date, last_visit_date, total_visits)
+             VALUES ($1, $2, $3, $4, $5, $6, 1) RETURNING id`,
+            [phoneDigits, name, area, birthDate, today, lastVisitDate]
         );
         
         return { id: result.rows[0].id };

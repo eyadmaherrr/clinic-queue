@@ -244,6 +244,7 @@ app.get("/view/:token", (req, res) => {
 // ==================== API ROUTES ====================
 
 // Check patient history by phone number - FIXED
+// Check patient history by phone number - WITH BIRTH DATE
 app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
     try {
         let phone = req.params.phone;
@@ -265,7 +266,8 @@ app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
                 patientId: patient.id,
                 name: patient.name,
                 area: patient.area,
-                lastVisitDate: patient.last_visit_date, // This will be null for new patients
+                birthDate: patient.birth_date,  // 👈 ADD THIS
+                lastVisitDate: patient.last_visit_date,
                 totalVisits: patient.total_visits
             });
         } else {
@@ -402,6 +404,7 @@ app.get('/api/patients/:id', requireAuth, async (req, res) => {
 });
 
 // Add patient - FIXED for new patients
+// Add patient - WITH BIRTH DATE
 app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
     try {
         console.log('Add patient request received:', req.body);
@@ -411,6 +414,7 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
             phoneNumber, 
             isPriority = false,
             area = 'Unknown',
+            birthDate = null,  // 👈 ADD THIS
             lastVisitDate = null,
             isNewPatient = true 
         } = req.body;
@@ -441,7 +445,7 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
             return res.status(400).json({ error: 'Phone number already registered in queue' });
         }
 
-        // Create new patient object
+        // Create new patient object WITH BIRTH DATE
         const newPatient = {
             id: nextId++,
             name: name.trim(),
@@ -452,6 +456,7 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
             isPriority: isPriority,
             isMissed: false,
             area: area.trim() || 'Unknown',
+            birthDate: birthDate,  // 👈 ADD THIS
             lastVisitDate: null, // Always start with null for new patients
             isNewPatient: true
         };
@@ -466,18 +471,20 @@ app.post('/api/add-patient', requireAuth, express.json(), async (req, res) => {
                 newPatient.patientId = existing.id;
                 newPatient.isNewPatient = false;
                 newPatient.lastVisitDate = existing.last_visit_date; // Use their PREVIOUS last visit date
+                newPatient.birthDate = existing.birth_date; // 👈 ADD THIS
                 
                 // Update their record for NEXT time
                 await dbHelpers.updatePatientVisit(existing.id);
                 
                 console.log(`✅ Returning patient #${existing.id} - last visit was ${existing.last_visit_date}`);
             } else {
-                // This is a NEW patient
+                // This is a NEW patient - INCLUDE BIRTH DATE
                 const result = await dbHelpers.addPatient({
                     phoneDigits,
                     name: name.trim(),
                     area: area.trim() || 'Unknown',
-                    lastVisitDate: null // Don't set last visit date for new patients
+                    birthDate: birthDate,  // 👈 ADD THIS
+                    lastVisitDate: null
                 });
                 newPatient.patientId = result.id;
                 newPatient.isNewPatient = true;
