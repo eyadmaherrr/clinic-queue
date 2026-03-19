@@ -107,7 +107,14 @@ function fetchPatientHistory(patient) {
             lastVisitEl.textContent = formatDate(patient.lastVisitDate);
         }
         if (typeEl) {
+            // THIS IS WHERE WE INDICATE NEW VS RETURNING PATIENT
             typeEl.textContent = patient.lastVisitDate ? 'Returning Patient' : 'New Patient';
+            // Add a class for styling if needed
+            if (!patient.lastVisitDate) {
+                typeEl.classList.add('new-patient-badge');
+            } else {
+                typeEl.classList.remove('new-patient-badge');
+            }
         }
         return;
     }
@@ -120,7 +127,10 @@ function fetchPatientHistory(patient) {
         const lastVisitEl = document.getElementById('currentLastVisit');
         const typeEl = document.getElementById('currentType');
         if (lastVisitEl) lastVisitEl.textContent = 'Unknown';
-        if (typeEl) typeEl.textContent = 'Patient';
+        if (typeEl) {
+            typeEl.textContent = 'Unknown';
+            typeEl.classList.remove('new-patient-badge');
+        }
         return;
     }
     
@@ -139,7 +149,14 @@ function fetchPatientHistory(patient) {
                 lastVisitEl.textContent = data.lastVisitDate ? formatDate(data.lastVisitDate) : 'First visit';
             }
             if (typeEl) {
+                // THIS IS WHERE WE INDICATE NEW VS RETURNING PATIENT
                 typeEl.textContent = data.lastVisitDate ? 'Returning Patient' : 'New Patient';
+                // Add a class for styling if needed
+                if (!data.lastVisitDate) {
+                    typeEl.classList.add('new-patient-badge');
+                } else {
+                    typeEl.classList.remove('new-patient-badge');
+                }
             }
         })
         .catch(error => {
@@ -148,7 +165,10 @@ function fetchPatientHistory(patient) {
             const typeEl = document.getElementById('currentType');
             
             if (lastVisitEl) lastVisitEl.textContent = 'Unknown';
-            if (typeEl) typeEl.textContent = 'Patient';
+            if (typeEl) {
+                typeEl.textContent = 'Patient';
+                typeEl.classList.remove('new-patient-badge');
+            }
         });
 }
 
@@ -164,11 +184,12 @@ function updateNextPatients(queue) {
     }
     
     list.innerHTML = nextFive.map((patient, index) => `
-        <div class="next-patient-item-small ${patient.isPriority ? 'priority' : ''}">
+        <div class="next-patient-item-small ${patient.isPriority ? 'priority' : ''} ${!patient.lastVisitDate ? 'new-patient' : ''}">
             <span class="next-position">${index + 1}</span>
             <span class="next-name">${escapeHtml(patient.name)}</span>
             <span class="next-area">${escapeHtml(patient.area || 'Unknown')}</span>
             ${patient.isPriority ? '<span class="priority-star">⭐</span>' : ''}
+            ${!patient.lastVisitDate ? '<span class="new-badge">🆕 New</span>' : ''}
         </div>
     `).join('');
 }

@@ -3563,3 +3563,48 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+/* New Patient Indicator Styles */
+.new-patient-badge {
+    background-color: #10b981 !important;
+    color: white !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    animation: pulse 2s infinite;
+}
+
+.next-patient-item-small.new-patient {
+    border-left: 4px solid #10b981;
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+.new-badge {
+    background-color: #10b981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* Patient Type Styling */
+#currentType.new-patient-badge {
+    background-color: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+}
