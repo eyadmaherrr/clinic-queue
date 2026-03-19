@@ -19,17 +19,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Modal close button
-    const closeBtn = document.querySelector('.close-modal');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closePatientModal);
-    }
+    // Modal close buttons
+    const closeBtns = document.querySelectorAll('.close-modal');
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) modal.classList.add('hidden');
+        });
+    });
     
     // Click outside modal to close
     window.addEventListener('click', (e) => {
-        const modal = document.getElementById('patientModal');
-        if (e.target === modal) {
-            closePatientModal();
+        const patientModal = document.getElementById('patientModal');
+        const editModal = document.getElementById('editPatientModal');
+        if (e.target === patientModal) {
+            patientModal.classList.add('hidden');
+        }
+        if (e.target === editModal) {
+            editModal.classList.add('hidden');
         }
     });
 });
@@ -43,7 +50,7 @@ function loadPatients(search = '') {
     
     tbody.innerHTML = `
         <tr>
-            <td colspan="8" class="empty-table">
+            <td colspan="9" class="empty-table">
                 <div class="spinner"></div>
                 <p>Loading patients...</p>
             </td>
@@ -90,7 +97,7 @@ function loadPatients(search = '') {
             if (tbody) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="empty-table">
+                        <td colspan="9" class="empty-table">
                             <i class="fas fa-exclamation-triangle" style="color: var(--danger); font-size: 3rem;"></i>
                             <p style="color: var(--danger);">Failed to load patients</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem;">${error.message}</p>
@@ -111,7 +118,7 @@ function renderPatientsTable(patients) {
     if (!patients || patients.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-table">
+                <td colspan="9" class="empty-table">
                     <i class="fas fa-users" style="font-size: 3rem; opacity: 0.5;"></i>
                     <p>No patients found</p>
                 </td>
@@ -132,26 +139,30 @@ function renderPatientsTable(patients) {
         const name = patient.name || 'Unknown';
         const phone = patient.phone_digits ? '+' + patient.phone_digits : '-';
         const area = patient.area || '-';
+        const birthDate = patient.birth_date ? formatDate(patient.birth_date) : '-';
         const firstVisit = patient.first_visit_date ? formatDate(patient.first_visit_date) : '-';
-        // Use last_visit_date from database
         const lastVisit = patient.last_visit_date ? formatDate(patient.last_visit_date) : 
                          (patient.last_visit ? formatDate(patient.last_visit) : '-');
         const totalVisits = patient.total_visits || 1;
         
         html += `
-        <tr onclick="viewPatientDetails(${id})" style="cursor: pointer;">
+        <tr>
             <td>#${id}</td>
             <td><strong>${escapeHtml(name)}</strong></td>
             <td>${phone}</td>
             <td>${escapeHtml(area)}</td>
+            <td>${birthDate}</td>
             <td>${firstVisit}</td>
             <td>${lastVisit}</td>
             <td><span class="visit-badge">${totalVisits}</span></td>
             <td>
-                <button class="action-btn" onclick="event.stopPropagation(); viewPatientDetails(${id})">
+                <button class="action-btn" onclick="viewPatientDetails(${id})" title="View details">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="action-btn whatsapp-btn" onclick="event.stopPropagation(); sendWhatsAppToPatient('${patient.phone_digits || ''}', '${escapeHtml(name)}')">
+                <button class="action-btn edit-btn" onclick="openEditPatientModal(${id})" title="Edit patient">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn whatsapp-btn" onclick="sendWhatsAppToPatient('${patient.phone_digits || ''}', '${escapeHtml(name)}')" title="Send WhatsApp">
                     <i class="fab fa-whatsapp"></i>
                 </button>
             </td>
@@ -162,7 +173,7 @@ function renderPatientsTable(patients) {
     if (html === '') {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-table">
+                <td colspan="9" class="empty-table">
                     <p>No valid patients found</p>
                 </td>
             </tr>
@@ -265,6 +276,7 @@ function viewPatientDetails(patientId) {
             document.getElementById('modalPatientName').textContent = patient?.name || 'Unknown';
             document.getElementById('modalPatientPhone').textContent = patient?.phone_digits ? '+' + patient.phone_digits : '-';
             document.getElementById('modalPatientArea').textContent = patient?.area || '-';
+            document.getElementById('modalPatientBirthDate').textContent = patient?.birth_date ? formatDate(patient.birth_date) : '-';
             document.getElementById('modalFirstVisit').textContent = formatDate(patient?.first_visit_date);
             document.getElementById('modalLastVisit').textContent = formatDate(patient?.last_visit_date);
             document.getElementById('modalTotalVisits').textContent = patient?.total_visits || 1;
@@ -286,6 +298,77 @@ function viewPatientDetails(patientId) {
                 </tr>
             `;
         });
+}
+
+function openEditPatientModal(patientId) {
+    // Close the view modal if open
+    closePatientModal();
+    
+    // Fetch patient data
+    fetch(`/api/patients/${patientId}`)
+        .then(response => response.json())
+        .then(data => {
+            const patient = data.patient;
+            
+            // Populate edit form
+            document.getElementById('editPatientId').value = patient.id;
+            document.getElementById('editPatientName').value = patient.name || '';
+            document.getElementById('editPatientPhone').value = patient.phone_digits || '';
+            document.getElementById('editPatientArea').value = patient.area || '';
+            document.getElementById('editPatientBirthDate').value = patient.birth_date || '';
+            
+            // Show edit modal
+            document.getElementById('editPatientModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error loading patient for edit:', error);
+            alert('Failed to load patient data');
+        });
+}
+
+function closeEditPatientModal() {
+    document.getElementById('editPatientModal').classList.add('hidden');
+}
+
+function savePatientChanges() {
+    const patientId = document.getElementById('editPatientId').value;
+    const name = document.getElementById('editPatientName').value.trim();
+    const phone = document.getElementById('editPatientPhone').value.trim();
+    const area = document.getElementById('editPatientArea').value.trim();
+    const birthDate = document.getElementById('editPatientBirthDate').value;
+    
+    if (!name || !phone) {
+        alert('Name and phone number are required');
+        return;
+    }
+    
+    fetch('/api/edit-patient', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            patientId: parseInt(patientId),
+            name: name,
+            phoneNumber: phone,
+            area: area,
+            birthDate: birthDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Patient updated successfully');
+            closeEditPatientModal();
+            loadPatients(); // Refresh the list
+        } else {
+            alert(data.error || 'Failed to update patient');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating patient:', error);
+        alert('Failed to update patient');
+    });
 }
 
 function renderVisitsTable(visits) {
@@ -317,8 +400,7 @@ function renderVisitsTable(visits) {
 }
 
 function closePatientModal() {
-    const modal = document.getElementById('patientModal');
-    if (modal) modal.classList.add('hidden');
+    document.getElementById('patientModal').classList.add('hidden');
     currentPatientId = null;
 }
 
@@ -404,6 +486,9 @@ function formatTime(minutes) {
 // Make functions globally available
 window.viewPatientDetails = viewPatientDetails;
 window.closePatientModal = closePatientModal;
+window.openEditPatientModal = openEditPatientModal;
+window.closeEditPatientModal = closeEditPatientModal;
+window.savePatientChanges = savePatientChanges;
 window.sendWhatsAppFromModal = sendWhatsAppFromModal;
 window.sendWhatsAppToPatient = sendWhatsAppToPatient;
 window.changePage = changePage;

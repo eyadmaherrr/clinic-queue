@@ -244,7 +244,6 @@ app.get("/view/:token", (req, res) => {
 // ==================== API ROUTES ====================
 
 // Check patient history by phone number - FIXED
-// Check patient history by phone number - WITH BIRTH DATE
 app.get('/api/check-patient/:phone', requireAuth, async (req, res) => {
     try {
         let phone = req.params.phone;
@@ -643,12 +642,12 @@ app.post("/api/restore-patient", requireAuth, express.json(), (req, res) => {
   }
 });
 
-// Edit patient
-app.post("/api/edit-patient", requireAuth, express.json(), (req, res) => {
+// Edit patient - UPDATED WITH BIRTH DATE
+app.post("/api/edit-patient", requireAuth, express.json(), async (req, res) => {
   try {
     console.log("Edit patient request received:", req.body);
 
-    const { patientId, name, phoneNumber } = req.body;
+    const { patientId, name, phoneNumber, area, birthDate } = req.body;
 
     if (!patientId || !name || !phoneNumber) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -656,7 +655,7 @@ app.post("/api/edit-patient", requireAuth, express.json(), (req, res) => {
 
     const patient = queue.find((p) => p.id === patientId);
     if (!patient) {
-      return res.status(404).json({ error: "Patient not found" });
+      return res.status(404).json({ error: "Patient not found in queue" });
     }
 
     const phoneDigits = formatPhoneNumber(phoneNumber);
@@ -669,10 +668,28 @@ app.post("/api/edit-patient", requireAuth, express.json(), (req, res) => {
       return res.status(400).json({ error: "Phone number already in use" });
     }
 
+    // Update in-memory queue
     patient.name = name;
     patient.phoneDigits = phoneDigits;
     patient.phoneNumber = displayPhoneNumber(phoneDigits);
     patient.localNumber = getLocalNumber(phoneDigits);
+    patient.area = area || patient.area;
+    patient.birthDate = birthDate || patient.birthDate;
+
+    // Update in database
+    try {
+      await dbHelpers.updatePatientDetails({
+        patientId,
+        name,
+        phoneDigits,
+        area,
+        birthDate
+      });
+      console.log(`✅ Updated patient #${patientId} in database`);
+    } catch (dbError) {
+      console.error("Error updating patient in database:", dbError);
+      // Continue - queue still updated
+    }
 
     updateAllClients();
 

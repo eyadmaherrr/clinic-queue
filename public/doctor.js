@@ -65,11 +65,9 @@ function showCurrentPatient(patient) {
     
     if (birthDateEl && ageEl) {
         if (patient.birthDate) {
-            // Format birth date for display
             const formattedBirthDate = formatDate(patient.birthDate);
             birthDateEl.textContent = formattedBirthDate;
             
-            // Calculate and display age
             const age = calculateAge(patient.birthDate);
             ageEl.textContent = formatAge(age);
         } else {
@@ -85,6 +83,32 @@ function showCurrentPatient(patient) {
     } else {
         statusEl.textContent = 'Regular';
         statusEl.className = 'patient-status';
+    }
+    
+    // Clear complaint input if it exists
+    const complaintInput = document.getElementById('complaintInput');
+    if (complaintInput) complaintInput.value = '';
+    
+    // Set last visit date and patient type from patient data if available
+    const lastVisitEl = document.getElementById('currentLastVisit');
+    const typeEl = document.getElementById('currentType');
+    
+    if (lastVisitEl) {
+        if (patient.lastVisitDate) {
+            lastVisitEl.textContent = formatDate(patient.lastVisitDate);
+        } else {
+            lastVisitEl.textContent = 'First visit';
+        }
+    }
+    
+    if (typeEl) {
+        if (patient.lastVisitDate) {
+            typeEl.textContent = 'Returning Patient';
+            typeEl.classList.remove('new-patient-badge');
+        } else {
+            typeEl.textContent = 'New Patient';
+            typeEl.classList.add('new-patient-badge');
+        }
     }
 }
 
