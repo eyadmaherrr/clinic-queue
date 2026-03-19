@@ -29,7 +29,7 @@ pool.connect((err, client, release) => {
   release();
 });
 
-// Initialize database tables - MAKE THIS FUNCTION ASYNC AND RETURN A PROMISE
+// Initialize database tables
 async function initDb() {
   try {
     // Create patients table
@@ -39,7 +39,6 @@ async function initDb() {
         phone_digits TEXT UNIQUE,
         name TEXT NOT NULL,
         area TEXT,
-        birth_date TEXT,  // 👈 ADD THIS LINE
         first_visit_date TEXT,
         last_visit_date TEXT,
         total_visits INTEGER DEFAULT 1,
@@ -105,49 +104,43 @@ async function initDb() {
 // Create a promise that resolves when DB is ready
 const dbReady = initDb();
 
-// Helper functions - modified to wait for DB ready
+// Helper functions
 const dbHelpers = {
-  // Find patient by phone
-// Find patient by phone
-findPatientByPhone: async (phoneDigits) => {
-    await dbReady; // Wait for tables to be ready
+  findPatientByPhone: async (phoneDigits) => {
+    await dbReady;
     try {
       const result = await pool.query(
         'SELECT * FROM patients WHERE phone_digits = $1',
         [phoneDigits]
       );
-      return result.rows[0]; // This will now include birth_date
+      return result.rows[0];
     } catch (err) {
       console.error('Error finding patient:', err);
       return null;
     }
-},
+  },
 
-// Add new patient - MODIFIED
-// Add new patient - WITH BIRTH DATE
-addPatient: async (patientData) => {
-    await dbReady; // Wait for tables to be ready
+  addPatient: async (patientData) => {
+    await dbReady;
     try {
-        const { phoneDigits, name, area, birthDate, lastVisitDate } = patientData;
-        const today = new Date().toISOString().split('T')[0];
-        
-        // For new patients, first_visit_date is today, but last_visit_date should be NULL
-        const result = await pool.query(
-            `INSERT INTO patients (phone_digits, name, area, birth_date, first_visit_date, last_visit_date, total_visits)
-             VALUES ($1, $2, $3, $4, $5, $6, 1) RETURNING id`,
-            [phoneDigits, name, area, birthDate, today, lastVisitDate]
-        );
-        
-        return { id: result.rows[0].id };
+      const { phoneDigits, name, area, lastVisitDate } = patientData;
+      const today = new Date().toISOString().split('T')[0];
+      
+      const result = await pool.query(
+        `INSERT INTO patients (phone_digits, name, area, first_visit_date, last_visit_date, total_visits)
+         VALUES ($1, $2, $3, $4, $5, 1) RETURNING id`,
+        [phoneDigits, name, area, today, lastVisitDate]
+      );
+      
+      return { id: result.rows[0].id };
     } catch (err) {
-        console.error('Error adding patient:', err);
-        throw err;
+      console.error('Error adding patient:', err);
+      throw err;
     }
-},
+  },
 
-  // Update patient last visit
   updatePatientVisit: async (patientId) => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
       const today = new Date().toISOString().split('T')[0];
       await pool.query(
@@ -162,18 +155,14 @@ addPatient: async (patientData) => {
     }
   },
 
-  // Save current queue
   saveQueue: async (queue, currentServing, nextId) => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
-      // Start a transaction
       await pool.query('BEGIN');
       
-      // Clear existing queue
       await pool.query('DELETE FROM current_queue');
       await pool.query('DELETE FROM current_serving WHERE id = 1');
       
-      // Insert current queue
       for (let i = 0; i < queue.length; i++) {
         const patient = queue[i];
         await pool.query(
@@ -195,7 +184,6 @@ addPatient: async (patientData) => {
         );
       }
       
-      // Insert current serving
       if (currentServing) {
         await pool.query(
           `INSERT INTO current_serving (id, patient_id, name, phone_digits, call_time)
@@ -209,7 +197,6 @@ addPatient: async (patientData) => {
         );
       }
       
-      // Commit transaction
       await pool.query('COMMIT');
       return { success: true };
     } catch (err) {
@@ -219,9 +206,8 @@ addPatient: async (patientData) => {
     }
   },
 
-  // Load queue from database
   loadQueue: async () => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
       const queueResult = await pool.query(
         'SELECT * FROM current_queue ORDER BY position'
@@ -248,7 +234,6 @@ addPatient: async (patientData) => {
         phoneDigits: servingResult.rows[0].phone_digits
       } : null;
       
-      // Get next ID (max id + 1)
       const maxIdResult = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM current_queue');
       const nextId = parseInt(maxIdResult.rows[0].next_id) || 1;
       
@@ -263,9 +248,8 @@ addPatient: async (patientData) => {
     }
   },
 
-  // Add to history
   addToHistory: async (patient, callTime, completeTime, waitingTime, doctorNotes = '') => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
       await pool.query(
         `INSERT INTO queue_history 
@@ -289,9 +273,8 @@ addPatient: async (patientData) => {
     }
   },
 
-  // Get all patients with pagination
   getAllPatients: async (limit = 20, offset = 0, search = '') => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
       let query = 'SELECT * FROM patients';
       let countQuery = 'SELECT COUNT(*) as total FROM patients';
@@ -312,7 +295,6 @@ addPatient: async (patientData) => {
       const patientsResult = await pool.query(query, params);
       const countResult = await pool.query(countQuery, countParams);
       
-      // Get visit counts for each patient
       for (let patient of patientsResult.rows) {
         const visitCount = await pool.query(
           'SELECT COUNT(*) as count FROM queue_history WHERE patient_id = $1',
@@ -337,9 +319,8 @@ addPatient: async (patientData) => {
     }
   },
 
-  // Get patient with history
   getPatientWithHistory: async (patientId) => {
-    await dbReady; // Wait for tables to be ready
+    await dbReady;
     try {
       const patientResult = await pool.query(
         'SELECT * FROM patients WHERE id = $1',
@@ -367,5 +348,4 @@ addPatient: async (patientData) => {
   }
 };
 
-// Export helpers and a promise that resolves when DB is ready
 module.exports = { dbHelpers, pool, dbReady };
