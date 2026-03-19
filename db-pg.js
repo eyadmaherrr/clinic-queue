@@ -330,6 +330,34 @@ const dbHelpers = {
     }
   },
 
+  // Add this to dbHelpers in db-pg.js
+updatePatientDetails: async (patientData) => {
+    await dbReady;
+    try {
+        const { patientId, name, phoneDigits, area, birthDate } = patientData;
+        
+        const result = await pool.query(
+            `UPDATE patients 
+             SET name = $1, 
+                 phone_digits = $2, 
+                 area = $3, 
+                 birth_date = $4
+             WHERE id = $5 
+             RETURNING id`,
+            [name, phoneDigits, area, birthDate, patientId]
+        );
+        
+        if (result.rows.length === 0) {
+            throw new Error('Patient not found');
+        }
+        
+        return { success: true, id: result.rows[0].id };
+    } catch (err) {
+        console.error('Error updating patient details:', err);
+        throw err;
+    }
+},
+
   getPatientWithHistory: async (patientId) => {
     await dbReady;
     try {
@@ -358,5 +386,7 @@ const dbHelpers = {
     }
   }
 };
+
+
 
 module.exports = { dbHelpers, pool, dbReady };
