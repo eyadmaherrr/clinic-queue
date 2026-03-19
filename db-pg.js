@@ -32,7 +32,7 @@ pool.connect((err, client, release) => {
 // Initialize database tables
 async function initDb() {
   try {
-    // Create patients table
+    // Create patients table (this won't add new columns if table exists)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS patients (
         id SERIAL PRIMARY KEY,
@@ -46,6 +46,17 @@ async function initDb() {
       )
     `);
     console.log('✅ patients table ready');
+    
+    // ADD THIS - Check if birth_date column exists and add it if not
+    try {
+      await pool.query(`
+        ALTER TABLE patients 
+        ADD COLUMN IF NOT EXISTS birth_date TEXT
+      `);
+      console.log('✅ Added birth_date column to patients table');
+    } catch (err) {
+      console.log('Note: birth_date column might already exist');
+    }
     
     // Create queue_history table
     await pool.query(`
